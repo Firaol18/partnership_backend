@@ -5,27 +5,25 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
+import { AuthModule } from './modules/auth/auth.module';
 import { LoggerModule } from './modules/common-modules/logger/logger.module';
 
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { JwtAuthGuard } from './common/guards/auth.guard';
-import { RolesGuard } from './common/guards/roles.guard';
-import { ValidationPipe } from './common/pipes/validation.pipe';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from './modules/auth/guards/roles.guard';
 
 import appConfig from './config/app.config';
 
 @Module({
   imports: [
-    // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig],
       envFilePath: ['.env.local', '.env'],
     }),
 
-    // Rate Limiting
     ThrottlerModule.forRoot([
       {
         ttl: 60,
@@ -33,7 +31,6 @@ import appConfig from './config/app.config';
       },
     ]),
 
-    // Event Emitter
     EventEmitterModule.forRoot({
       wildcard: false,
       delimiter: '.',
@@ -44,12 +41,10 @@ import appConfig from './config/app.config';
       ignoreErrors: false,
     }),
 
-    // Common Modules
-
     LoggerModule,
+    AuthModule,
   ],
   providers: [
-    // Global Guards
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -58,14 +53,10 @@ import appConfig from './config/app.config';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
-
-    // Global Filters
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
     },
-
-    // Global Interceptors
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
@@ -74,11 +65,9 @@ import appConfig from './config/app.config';
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
-
-    // Global Pipes
-    {
-      provide: APP_PIPE,
-      useClass: ValidationPipe,
+{
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
     },
   ],
 })

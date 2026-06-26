@@ -1,4 +1,4 @@
-// src/common/guards/auth.guard.ts
+// src/auth/guards/jwt-auth.guard.ts
 import {
   Injectable,
   ExecutionContext,

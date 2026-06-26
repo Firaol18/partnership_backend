@@ -294,6 +294,10 @@ Create migration
 npx prisma migrate dev --name migration_name
 ```
 
+```bash
+npm run prisma:seed
+```
+
 Generate Prisma Client
 
 ```bash

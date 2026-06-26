@@ -46,8 +46,12 @@ lerna-debug.log*
 .temp
 .tmp
 
-# Runtime data
-pids
+# Diagnostics
+prisma/.prisma
+*.prisma_state
+
+# Prisma Studio
+prisma/dev.db
 *.pid
 *.seed
 *.pid.lock
@@ -57,3 +61,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /node_modules/.cache
 /migrations/*.js
 uploads
+/generated/prisma
+/prisma/migrations/

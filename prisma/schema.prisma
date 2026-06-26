@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique @db.VarChar(50)
+  description String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@index([name], map: "idx_roles_name")
+  @@map("roles")
+}
+
+model Permission {
+  id       String @id @default(uuid()) @db.Uuid
+  resource String @db.VarChar(100)
+  action   String @db.VarChar(50)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  rolePermissions RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id String @id @default(uuid()) @db.Uuid
+
+  roleId       String @db.Uuid
+  permissionId String @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  roleId String @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId], map: "idx_user_roles_user")
+  @@index([roleId], map: "idx_user_roles_role")
+  @@map("user_roles")
+}
+
+model Division {
+  id String @id @default(uuid()) @db.Uuid
+
+  name String @unique @db.VarChar(100)
+
+  directorId String? @db.Uuid
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  director User? @relation("DivisionDirector", fields: [directorId], references: [id])
+
+  users User[]
+
+  @@index([name], map: "idx_divisions_name")
+  @@index([directorId], map: "idx_divisions_director")
+  @@map("divisions")
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+
+  fullName     String @db.VarChar(150)
+  email        String @unique @db.VarChar(150)
+  passwordHash String @db.VarChar(255)
+  phone          String? @db.VarChar(20)
+  profilePicture String?
+  position       String? @db.VarChar(100)
+
+  divisionId  String? @db.Uuid
+  directorate String? @db.VarChar(100)
+  status String @default("ACTIVE") @db.VarChar(30)
+  tokenVersion Int @default(0)
+  loginAttempts Int @default(0)
+  lockedUntil DateTime?
+  lastLoginAt DateTime?
+  lastLoginIp String? @db.VarChar(45)
+  lastLoginUserAgent String?
+  lastPasswordChangeAt DateTime?
+  passwordExpiresAt DateTime?
+  mustChangePassword Boolean @default(false)
+  isEmailVerified Boolean @default(true)
+  emailVerifiedAt DateTime?
+  failedLoginAt DateTime?
+  refreshTokenHash String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  deletedAt DateTime?
+
+
+
+  division Division? @relation(fields: [divisionId], references: [id])
+
+  directedDivisions Division[] @relation("DivisionDirector")
+
+  userRoles UserRole[]
+
+  activityLogs UserActivityLog[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([status], map: "idx_users_status")
+  @@index([divisionId], map: "idx_users_division")
+  @@map("users")
+}
+
+model UserActivityLog {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+
+  action String @db.VarChar(50)
+
+  entityType String @db.VarChar(50)
+
+  entityId String
+
+  oldValues Json?
+
+  newValues Json?
+
+  ipAddress Unsupported("inet")?
+
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_activity_user")
+  @@index([createdAt], map: "idx_activity_created")
+  @@map("user_activity_logs")
+}
