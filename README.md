@@ -431,12 +431,6 @@ Verify:
 
 ---
 
-# Authors
-
-**Lechisa Bedasa**
-
-Software Engineer
-
 ---
 
 # License
