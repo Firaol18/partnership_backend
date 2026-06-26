@@ -1,98 +1,446 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Partnership Management System Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A robust and scalable backend API for the **Partnership Management System**, built with **NestJS**, **Prisma ORM**, and **PostgreSQL**. The system manages the complete partnership lifecycle, from opportunity identification to engagement, agreement management, partner registration, implementation, monitoring, and reporting.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Table of Contents
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- Overview
+- Features
+- Technology Stack
+- Project Structure
+- Prerequisites
+- Installation
+- Environment Variables
+- Database Setup
+- Running the Application
+- API Documentation
+- Authentication
+- Scripts
+- Database Migration
+- Testing
+- Logging
+- Coding Standards
+- Git Workflow
+- Deployment
+- Troubleshooting
+- License
 
-## Project setup
+---
 
-```bash
-$ npm install
+# Overview
+
+The Partnership Management System is designed to digitize and automate partnership processes within an organization.
+
+The backend provides secure REST APIs for:
+
+- User Authentication
+- Role & Permission Management
+- Opportunity Management
+- Engagement Management
+- Agreement Management
+- Partner Registration
+- Document Management
+- Workflow Management
+- Notifications
+- Audit Logging
+- Reports & Dashboards
+
+---
+
+# Features
+
+- JWT Authentication
+- Role Based Access Control (RBAC)
+- Permission Management
+- RESTful APIs
+- Swagger API Documentation
+- Prisma ORM
+- PostgreSQL
+- Request Validation
+- Global Exception Handling
+- Logging
+- File Upload Support
+- Audit Trail
+- Pagination
+- Filtering
+- Search
+- Soft Delete
+- Modular Architecture
+
+---
+
+# Technology Stack
+
+| Technology      | Version |
+| --------------- | ------- |
+| Node.js         | 22+     |
+| NestJS          | Latest  |
+| Prisma ORM      | Latest  |
+| PostgreSQL      | Latest  |
+| TypeScript      | Latest  |
+| JWT             | Latest  |
+| Swagger         | Latest  |
+| Class Validator | Latest  |
+
+---
+
+# Project Structure
+
+```
+src/
+│
+├── common/
+│   ├── decorators/
+│   ├── dto/
+│   ├── enums/
+│   ├── filters/
+│   ├── guards/
+│   ├── interceptors/
+│   ├── middleware/
+│   ├── pipes/
+│   └── utils/
+│
+├── config/
+│
+├── prisma/
+│
+├── modules/
+│   ├── auth/
+│   ├── users/
+│   ├── roles/
+│   ├── permissions/
+│   ├── opportunities/
+│   ├── engagements/
+│   ├── agreements/
+│   ├── partners/
+│   ├── documents/
+│   ├── notifications/
+│   └── reports/
+│
+├── app.module.ts
+└── main.ts
 ```
 
-## Compile and run the project
+---
+
+# Prerequisites
+
+Before running the project, ensure the following are installed:
+
+- Node.js (22 or higher)
+- npm
+- PostgreSQL
+- Git
+
+---
+
+# Installation
+
+Clone the repository
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone https://gitlab.aii.et/lechisa21/partnership-backend.git
 ```
 
-## Run tests
+Move into the project directory
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cd partnership-backend
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Install dependencies
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+# Environment Variables
 
-Check out a few resources that may come in handy when working with NestJS:
+Create a `.env` file in the project root.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Example:
 
-## Support
+```env
+NODE_ENV=development
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+PORT=3000
 
-## Stay in touch
+API_PREFIX=api
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+DATABASE_URL="postgresql://postgres:password@localhost:5432/partnership_db"
 
-## License
+JWT_SECRET=your-secret-key
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+JWT_EXPIRES_IN=1d
+
+REFRESH_TOKEN_SECRET=refresh-secret
+
+REFRESH_TOKEN_EXPIRES_IN=7d
+
+CORS_ORIGIN=http://localhost:3000
+```
+
+---
+
+# Database Setup
+
+Generate Prisma Client
+
+```bash
+npx prisma generate
+```
+
+Run database migrations
+
+```bash
+npx prisma migrate dev
+```
+
+If you already have migrations
+
+```bash
+npx prisma migrate deploy
+```
+
+Open Prisma Studio
+
+```bash
+npx prisma studio
+```
+
+---
+
+# Running the Application
+
+Development
+
+```bash
+npm run start:dev
+```
+
+Production
+
+```bash
+npm run build
+npm run start:prod
+```
+
+Watch Mode
+
+```bash
+npm run start:dev
+```
+
+---
+
+# API Documentation
+
+Swagger documentation is available after starting the server.
+
+```
+http://localhost:3000/api/docs
+```
+
+Use the **Authorize** button to authenticate with a JWT token.
+
+Example:
+
+```
+Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+---
+
+# Authentication
+
+The system uses JWT Authentication.
+
+Typical flow:
+
+1. Login
+2. Receive Access Token
+3. Click **Authorize** in Swagger
+4. Paste JWT token
+5. Access protected endpoints
+
+---
+
+# Scripts
+
+| Command            | Description          |
+| ------------------ | -------------------- |
+| npm install        | Install dependencies |
+| npm run start      | Start application    |
+| npm run start:dev  | Development mode     |
+| npm run build      | Build project        |
+| npm run start:prod | Production           |
+| npm run lint       | Lint project         |
+| npm run format     | Format code          |
+| npm run test       | Unit tests           |
+| npm run test:e2e   | End-to-end tests     |
+| npm run test:cov   | Test coverage        |
+
+---
+
+# Database Migration
+
+Create migration
+
+```bash
+npx prisma migrate dev --name migration_name
+```
+
+Generate Prisma Client
+
+```bash
+npx prisma generate
+```
+
+Reset Database
+
+```bash
+npx prisma migrate reset
+```
+
+Deploy Migrations
+
+```bash
+npx prisma migrate deploy
+```
+
+---
+
+# Logging
+
+The application includes centralized logging for:
+
+- API Requests
+- API Responses
+- Errors
+- Authentication
+- Database Operations
+- System Events
+
+---
+
+# Coding Standards
+
+- Use TypeScript strict mode.
+- Follow NestJS module architecture.
+- Validate all incoming DTOs.
+- Use Prisma for all database operations.
+- Keep business logic in services.
+- Keep controllers thin.
+- Use dependency injection.
+- Follow RESTful API conventions.
+
+---
+
+# Git Workflow
+
+Create a feature branch
+
+```bash
+git checkout -b feature/feature-name
+```
+
+Commit changes
+
+```bash
+git commit -m "Add feature"
+```
+
+Push branch
+
+```bash
+git push origin feature/feature-name
+```
+
+Create a Merge Request in GitLab.
+
+---
+
+# Deployment
+
+Production checklist
+
+- Configure environment variables
+- Run Prisma migrations
+- Generate Prisma Client
+- Build application
+- Start production server
+- Configure reverse proxy (Nginx)
+- Enable HTTPS
+- Configure logging
+- Configure backups
+
+---
+
+# Troubleshooting
+
+### Prisma Client Outdated
+
+```bash
+npx prisma generate
+```
+
+---
+
+### Migration Error
+
+```bash
+npx prisma migrate reset
+```
+
+---
+
+### Port Already in Use
+
+Change
+
+```
+PORT=3000
+```
+
+to another available port.
+
+---
+
+### Cannot Connect to Database
+
+Verify:
+
+- PostgreSQL is running
+- DATABASE_URL is correct
+- Database exists
+- User credentials are correct
+
+---
+
+# Contributing
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Push the branch.
+5. Open a Merge Request.
+
+---
+
+# Authors
+
+**Lechisa Bedasa**
+
+Software Engineer
+
+---
+
+# License
+
+This project is proprietary and intended for internal organizational use unless otherwise specified.
+
+© 2026 Partnership Management System. All rights reserved.
