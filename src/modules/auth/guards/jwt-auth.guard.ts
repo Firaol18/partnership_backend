@@ -26,10 +26,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     // Log for debugging
     const request = context.switchToHttp().getRequest();
-    console.log('=== JwtAuthGuard ===');
-    console.log('Path:', request.path);
-    console.log('Method:', request.method);
-    console.log('Is Public:', isPublic);
+
     console.log(
       'Authorization:',
       request.headers.authorization ? 'Present' : 'Missing',
