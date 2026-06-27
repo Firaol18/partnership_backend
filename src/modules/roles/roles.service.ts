@@ -420,7 +420,12 @@ export class RolesService {
   }
 
   private mapToResponseDto(role: any): RoleResponseDto {
-    const permissions = role.rolePermissions?.map((rp) => rp.permission) || [];
+    // Extract permissions while stripping out their IDs and database timestamps
+    const permissions =
+      role.rolePermissions?.map((rp: any) => ({
+        resource: rp.permission.resource,
+        action: rp.permission.action,
+      })) || [];
 
     return {
       id: role.id,

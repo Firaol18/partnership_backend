@@ -35,7 +35,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../../common/interfaces/jwt-payload.interface';
 
 @ApiTags('Users')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UsePipes(new ValidationPipe({ transform: true }))

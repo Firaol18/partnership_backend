@@ -16,6 +16,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { DivisionsModule } from './modules/divisions/divisions.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -48,6 +49,7 @@ import appConfig from './config/app.config';
     UsersModule,
     RolesModule,
     DivisionsModule,
+    PermissionsModule,
   ],
   providers: [
     {

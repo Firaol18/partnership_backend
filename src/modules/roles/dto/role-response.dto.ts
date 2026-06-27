@@ -3,19 +3,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class PermissionResponseDto {
   @ApiProperty()
-  id: string;
-
-  @ApiProperty()
   resource: string;
 
   @ApiProperty()
   action: string;
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
 }
 
 export class RoleResponseDto {
