@@ -1,5 +1,4 @@
-// src/auth/strategies/jwt.strategy.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
@@ -10,20 +9,40 @@ import {
 } from '../../../common/interfaces/jwt-payload.interface';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+  private readonly logger = new Logger(JwtStrategy.name);
+
   constructor(
     private configService: ConfigService,
     private prisma: PrismaService,
   ) {
-    const secret = configService.get<string>('JWT_SECRET') ?? 'secret-key';
+    // Get the secret - same logic as your working project
+    const secret =
+      configService.get<string>('JWT_ACCESS_SECRET') ||
+      configService.get<string>('JWT_SECRET');
+
+    if (!secret) {
+      throw new Error('JWT_ACCESS_SECRET or JWT_SECRET must be set');
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: secret as unknown as Buffer,
+      secretOrKey: secret,
     });
+
+    console.log('=== JWT Strategy Config ===');
+    console.log('Secret:', secret);
+    console.log('===========================');
+
+    this.logger.log(
+      'JwtStrategy initialized with dynamic configuration secret.',
+    );
   }
 
   async validate(payload: JwtPayload): Promise<AuthUser> {
+    this.logger.log(`Validating payload: ${JSON.stringify(payload)}`);
+
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       include: {

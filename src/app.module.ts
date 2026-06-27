@@ -13,7 +13,9 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
-
+import { UsersModule } from './modules/users/users.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { DivisionsModule } from './modules/divisions/divisions.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -43,6 +45,9 @@ import appConfig from './config/app.config';
 
     LoggerModule,
     AuthModule,
+    UsersModule,
+    RolesModule,
+    DivisionsModule,
   ],
   providers: [
     {
@@ -65,7 +70,7 @@ import appConfig from './config/app.config';
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
-{
+    {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },

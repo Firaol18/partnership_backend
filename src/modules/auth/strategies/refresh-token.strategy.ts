@@ -1,43 +1,56 @@
-// src/auth/strategies/refresh-token.strategy.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../../prisma/prisma.service';
-import { JwtPayload } from '../../../common/interfaces/jwt-payload.interface';
+import { Request } from 'express';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh',
 ) {
-  constructor(
-    private configService: ConfigService,
-    private prisma: PrismaService,
-  ) {
+  constructor(private configService: ConfigService) {
     const secret =
-      configService.get<string>('REFRESH_TOKEN_SECRET') ?? 'refresh-secret';
+      configService.get<string>('JWT_REFRESH_SECRET') ||
+      configService.get<string>('JWT_SECRET');
+
+    if (!secret) {
+      throw new Error('JWT_REFRESH_SECRET or JWT_SECRET must be set');
+    }
+
     super({
-      jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request: Request) => {
+          // Try to get from body first
+          const token = request.body?.refreshToken;
+          if (token) return token;
+
+          // Then try from Authorization header
+          const authHeader = request.headers.authorization;
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            return authHeader.substring(7);
+          }
+
+          return null;
+        },
+      ]),
       ignoreExpiration: false,
-      secretOrKey: secret as unknown as Buffer,
+      secretOrKey: secret,
+      passReqToCallback: true,
     });
   }
 
-  async validate(payload: JwtPayload) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-    });
+  async validate(req: Request, payload: any) {
+    const refreshToken =
+      req.body?.refreshToken || req.headers.authorization?.substring(7);
 
-    if (!user || user.deletedAt || user.status !== 'ACTIVE') {
-      throw new UnauthorizedException('Invalid refresh token');
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not provided');
     }
 
-    // Check token version
-    if (user.tokenVersion !== payload.tokenVersion) {
-      throw new UnauthorizedException('Token has been revoked');
-    }
-
-    return user;
+    return {
+      ...payload,
+      refreshToken,
+    };
   }
 }

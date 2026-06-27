@@ -1,10 +1,10 @@
-// src/auth/auth.service.ts
 import {
   Injectable,
   UnauthorizedException,
   ConflictException,
   BadRequestException,
   ForbiddenException,
+  Inject,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -15,7 +15,6 @@ import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import {
   AuthTokens,
-  JwtPayload,
   AuthUser,
   LoginResponse,
 } from '../../common/interfaces/jwt-payload.interface';
@@ -24,7 +23,8 @@ import {
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService,
+    private jwtService: JwtService, // Access token service
+    @Inject('REFRESH_JWT') private refreshJwtService: JwtService, // Refresh token service
     private configService: ConfigService,
   ) {}
 
@@ -228,12 +228,10 @@ export class AuthService {
       user: authUser,
     };
   }
-
   async refreshToken(refreshToken: string): Promise<AuthTokens> {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
-      });
+      // Verify using the refresh JWT service
+      const payload = this.refreshJwtService.verify(refreshToken);
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
@@ -250,8 +248,14 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
+      // Check token version
+      if (user.tokenVersion !== payload.tokenVersion) {
+        throw new UnauthorizedException('Token has been revoked');
+      }
+
       return this.generateTokens(user);
     } catch (error) {
+      console.error('Refresh token error:', error.message);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -436,15 +440,14 @@ export class AuthService {
       tokenVersion: user.tokenVersion || 0,
     };
 
-    const accessToken = this.jwtService.sign(payload as Record<string, unknown>, {
-      secret: this.configService.get<string>('JWT_SECRET') ?? 'secret-key',
-      expiresIn: '15m',
-    });
+    // Use the configured JwtService without overriding secret
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.refreshJwtService.sign(payload);
 
-    const refreshToken = this.jwtService.sign(payload as Record<string, unknown>, {
-      secret: this.configService.get<string>('REFRESH_TOKEN_SECRET') ?? 'refresh-secret',
-      expiresIn: '7d',
-    });
+    console.log('=== Tokens Generated ===');
+    console.log('Access Token:', accessToken.substring(0, 30) + '...');
+    console.log('Refresh Token:', refreshToken.substring(0, 30) + '...');
+    console.log('========================');
 
     return { accessToken, refreshToken };
   }
