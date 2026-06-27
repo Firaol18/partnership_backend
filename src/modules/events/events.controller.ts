@@ -24,6 +24,7 @@ import { EventsService } from './events.service';
 import {
   CreateEventDto,
   CreateParticipantDto,
+  CreateEaiiParticipantDto,
   CreateBudgetDto,
 } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -164,9 +165,9 @@ export class EventsController {
   @ApiResponse({ status: 404, description: 'Event or user not found' })
   async addEaiiParticipant(
     @Param('id') id: string,
-    @Body('userId') userId: string,
+    @Body() body: CreateEaiiParticipantDto,
   ): Promise<EventResponseDto> {
-    return this.eventsService.addEaiiParticipant(id, userId);
+    return this.eventsService.addEaiiParticipant(id, body.userId);
   }
 
   @Delete(':id/eaii-participants/:userId')
