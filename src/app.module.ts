@@ -17,6 +17,7 @@ import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { DivisionsModule } from './modules/divisions/divisions.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { EventsModule } from './modules/events/events.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -50,6 +51,7 @@ import appConfig from './config/app.config';
     RolesModule,
     DivisionsModule,
     PermissionsModule,
+    EventsModule,
   ],
   providers: [
     {

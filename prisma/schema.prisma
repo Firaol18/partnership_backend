@@ -97,37 +97,33 @@ model Division {
 model User {
   id String @id @default(uuid()) @db.Uuid
 
-  fullName     String @db.VarChar(150)
-  email        String @unique @db.VarChar(150)
-  passwordHash String @db.VarChar(255)
+  fullName       String  @db.VarChar(150)
+  email          String  @unique @db.VarChar(150)
+  passwordHash   String  @db.VarChar(255)
   phone          String? @db.VarChar(20)
   profilePicture String?
   position       String? @db.VarChar(100)
 
-  divisionId  String? @db.Uuid
-  directorate String? @db.VarChar(100)
-  status String @default("ACTIVE") @db.VarChar(30)
-  tokenVersion Int @default(0)
-  loginAttempts Int @default(0)
-  lockedUntil DateTime?
-  lastLoginAt DateTime?
-  lastLoginIp String? @db.VarChar(45)
-  lastLoginUserAgent String?
+  divisionId           String?   @db.Uuid
+  directorate          String?   @db.VarChar(100)
+  status               String    @default("ACTIVE") @db.VarChar(30)
+  tokenVersion         Int       @default(0)
+  loginAttempts        Int       @default(0)
+  lockedUntil          DateTime?
+  lastLoginAt          DateTime?
+  lastLoginIp          String?   @db.VarChar(45)
+  lastLoginUserAgent   String?
   lastPasswordChangeAt DateTime?
-  passwordExpiresAt DateTime?
-  mustChangePassword Boolean @default(false)
-  isEmailVerified Boolean @default(true)
-  emailVerifiedAt DateTime?
-  failedLoginAt DateTime?
-  refreshTokenHash String?
+  passwordExpiresAt    DateTime?
+  mustChangePassword   Boolean   @default(false)
+  isEmailVerified      Boolean   @default(true)
+  emailVerifiedAt      DateTime?
+  failedLoginAt        DateTime?
+  refreshTokenHash     String?
 
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-
-
 
   division Division? @relation(fields: [divisionId], references: [id])
 
@@ -136,6 +132,17 @@ model User {
   userRoles UserRole[]
 
   activityLogs UserActivityLog[]
+
+  // Document relations - using different relation names to avoid conflicts
+  uploadedDocuments Document[] @relation("DocumentUploader")
+  updatedDocuments  Document[] @relation("DocumentUpdater")
+
+  // Event relations - using different relation names to avoid conflicts
+  createdEvents  Event[] @relation("EventCreator")
+  reviewedEvents Event[] @relation("EventReviewer")
+  verifiedEvents Event[] @relation("EventVerifier")
+
+  eventEaiiParticipants EventEaiiParticipant[]
 
   @@index([email], map: "idx_users_email")
   @@index([status], map: "idx_users_status")
@@ -169,4 +176,267 @@ model UserActivityLog {
   @@index([userId], map: "idx_activity_user")
   @@index([createdAt], map: "idx_activity_created")
   @@map("user_activity_logs")
+}
+
+model DocumentType {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique @db.VarChar(50)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  documents Document[]
+
+  @@map("document_types")
+}
+
+model Document {
+  id           String @id @default(uuid()) @db.Uuid
+  documentUid  String @unique @default(uuid()) @map("document_uid") @db.Uuid
+  documentName String @map("document_name") @db.VarChar(255)
+
+  documentTypeId String       @map("document_type_id") @db.Uuid
+  documentType   DocumentType @relation(fields: [documentTypeId], references: [id])
+
+  description String? @db.Text
+  fileName    String  @map("file_name") @db.VarChar(255)
+  filePath    String  @map("file_path") @db.Text
+  fileSize    BigInt? @map("file_size")
+  fileFormat  String? @map("file_format") @db.VarChar(20)
+  mimeType    String? @map("mime_type") @db.VarChar(100)
+
+  version           String?    @default("1.0") @db.VarChar(20)
+  isLatestVersion   Boolean    @default(true) @map("is_latest_version")
+  previousVersionId String?    @map("previous_version_id") @db.Uuid
+  previousVersion   Document?  @relation("DocumentVersions", fields: [previousVersionId], references: [id])
+  nextVersions      Document[] @relation("DocumentVersions")
+
+  entityType String? @map("entity_type") @db.VarChar(50)
+  entityId   String? @map("entity_id") @db.Uuid
+
+  isPublic         Boolean   @default(false) @map("is_public")
+  accessLevel      String    @default("internal") @map("access_level") @db.VarChar(20)
+  accessExpiryDate DateTime? @map("access_expiry_date")
+  downloadedCount  Int       @default(0) @map("downloaded_count")
+
+  status String @default("Active") @db.VarChar(50)
+
+  uploadedBy String @map("uploaded_by") @db.Uuid
+  uploader   User   @relation("DocumentUploader", fields: [uploadedBy], references: [id])
+
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  updatedBy String? @map("updated_by") @db.Uuid
+  updater   User?   @relation("DocumentUpdater", fields: [updatedBy], references: [id])
+
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  tags DocumentTag[]
+
+  @@index([isLatestVersion], map: "idx_docs_latest")
+  @@index([status], map: "idx_docs_status")
+  @@index([documentTypeId], map: "idx_docs_type")
+  @@index([uploadedBy], map: "idx_docs_uploader")
+  @@map("documents")
+}
+
+model DocumentTag {
+  id         String   @id @default(uuid()) @db.Uuid
+  documentId String   @map("document_id") @db.Uuid
+  document   Document @relation(fields: [documentId], references: [id])
+  tagName    String   @map("tag_name") @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([documentId, tagName])
+  @@index([documentId], map: "idx_doc_tags_doc")
+  @@index([tagName], map: "idx_doc_tags_name")
+  @@map("document_tags")
+}
+
+model EventType {
+  id          String  @id @default(uuid()) @db.Uuid
+  typeName    String  @unique @map("type_name") @db.VarChar(50)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  events Event[]
+
+  @@index([typeName], map: "idx_event_types_name")
+  @@map("event_types")
+}
+
+model EventCategory {
+  id           String  @id @default(uuid()) @db.Uuid
+  categoryName String  @unique @map("category_name") @db.VarChar(50)
+  description  String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  events Event[]
+
+  @@index([categoryName], map: "idx_event_categories_name")
+  @@map("event_categories")
+}
+
+model EventMode {
+  id          String  @id @default(uuid()) @db.Uuid
+  modeName    String  @unique @map("mode_name") @db.VarChar(50)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  events Event[]
+
+  @@map("event_modes")
+}
+
+model Event {
+  id        String @id @default(uuid()) @db.Uuid
+  eventUid  String @unique @default(uuid()) @map("event_uid") @db.Uuid
+  recordId  String @unique @map("record_id") @db.VarChar(50)
+  title     String @db.VarChar(255)
+  eventName String @map("event_name") @db.VarChar(255)
+
+  eventTypeId String    @map("event_type_id") @db.Uuid
+  eventType   EventType @relation(fields: [eventTypeId], references: [id])
+
+  eventCategoryId String        @map("event_category_id") @db.Uuid
+  eventCategory   EventCategory @relation(fields: [eventCategoryId], references: [id])
+
+  eventDate DateTime @map("event_date") @db.Date
+  startTime DateTime @map("start_time") @db.Time
+  endTime   DateTime @map("end_time") @db.Time
+
+  venue       String  @db.VarChar(255)
+  organizer   String? @db.VarChar(255)
+  coOrganizer String? @map("co_organizer") @db.VarChar(255)
+
+  eventModeId String    @map("event_mode_id") @db.Uuid
+  eventMode   EventMode @relation(fields: [eventModeId], references: [id])
+
+  partnerId String? @map("partner_id") @db.Uuid
+
+  status String @default("Planned") @db.VarChar(50)
+
+  createdBy String @map("created_by") @db.Uuid
+  creator   User   @relation("EventCreator", fields: [createdBy], references: [id])
+
+  reviewedBy  String?   @map("reviewed_by") @db.Uuid
+  reviewer    User?     @relation("EventReviewer", fields: [reviewedBy], references: [id])
+  reviewNotes String?   @map("review_notes") @db.Text
+  reviewDate  DateTime? @map("review_date")
+
+  verifiedBy        String?   @map("verified_by") @db.Uuid
+  verifier          User?     @relation("EventVerifier", fields: [verifiedBy], references: [id])
+  verificationNotes String?   @map("verification_notes") @db.Text
+  verificationDate  DateTime? @map("verification_date")
+  verifiedStatus    String    @default("pending") @map("verified_status") @db.VarChar(20)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  participants     EventParticipant[]
+  eaiiParticipants EventEaiiParticipant[]
+  budgets          EventBudget[]
+  outcomes         EventOutcome[]
+
+  @@index([recordId], map: "idx_events_record_id")
+  @@index([eventName], map: "idx_events_name")
+  @@index([eventDate], map: "idx_events_date")
+  @@index([eventTypeId], map: "idx_events_type")
+  @@index([eventCategoryId], map: "idx_events_category")
+  @@index([partnerId], map: "idx_events_partner")
+  @@index([status], map: "idx_events_status")
+  @@index([createdBy], map: "idx_events_creator")
+  @@map("events")
+}
+
+model EventParticipant {
+  id             String @id @default(uuid()) @db.Uuid
+  participantUid String @unique @default(uuid()) @map("participant_uid") @db.Uuid
+
+  eventId String @map("event_id") @db.Uuid
+  event   Event  @relation(fields: [eventId], references: [id])
+
+  fullName         String  @map("full_name") @db.VarChar(255)
+  organizationName String  @map("organization_name") @db.VarChar(255)
+  position         String? @db.VarChar(255)
+  email            String  @db.VarChar(255)
+  phoneNumber      String? @map("phone_number") @db.VarChar(50)
+  participantType  String? @map("participant_type") @db.VarChar(50)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([eventId], map: "idx_event_participants_event")
+  @@index([email], map: "idx_event_participants_email")
+  @@index([organizationName], map: "idx_event_participants_org")
+  @@map("event_participants")
+}
+
+model EventEaiiParticipant {
+  id      String @id @default(uuid()) @db.Uuid
+  eventId String @map("event_id") @db.Uuid
+  event   Event  @relation(fields: [eventId], references: [id])
+  userId  String @map("user_id") @db.Uuid
+  user    User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@unique([eventId, userId])
+  @@index([eventId], map: "idx_event_eaii_event")
+  @@index([userId], map: "idx_event_eaii_user")
+  @@map("event_eaii_participants")
+}
+
+model EventBudget {
+  id        String @id @default(uuid()) @db.Uuid
+  budgetUid String @unique @default(uuid()) @map("budget_uid") @db.Uuid
+  eventId   String @map("event_id") @db.Uuid
+  event     Event  @relation(fields: [eventId], references: [id])
+
+  estimatedBudget Decimal? @map("estimated_budget") @db.Decimal(15, 2)
+  actualBudget    Decimal? @map("actual_budget") @db.Decimal(15, 2)
+  fundingSource   String?  @map("funding_source") @db.VarChar(255)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([eventId], map: "idx_event_budget_event")
+  @@map("event_budget")
+}
+
+model EventOutcome {
+  id         String @id @default(uuid()) @db.Uuid
+  outcomeUid String @unique @default(uuid()) @map("outcome_uid") @db.Uuid
+  eventId    String @map("event_id") @db.Uuid
+  event      Event  @relation(fields: [eventId], references: [id])
+
+  keyDiscussions     String? @map("key_discussions") @db.Text
+  agreementsReached  String? @map("agreements_reached") @db.Text
+  actionPoints       String? @map("action_points") @db.Text
+  objectivesAchieved String? @map("objectives_achieved") @db.Text
+  recommendations    String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([eventId], map: "idx_event_outcomes_event")
+  @@map("event_outcomes")
 }

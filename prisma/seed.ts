@@ -277,6 +277,82 @@ async function main() {
 
   console.log('✅ Divisions created successfully');
 
+  // Create event types
+  console.log('📅 Creating event types...');
+  const eventTypes = [
+    { typeName: 'Conference', description: 'Large-scale professional gathering' },
+    { typeName: 'Workshop', description: 'Interactive skill-building session' },
+    { typeName: 'Seminar', description: 'Educational presentation or lecture' },
+    { typeName: 'Training', description: 'Instructional program for skill development' },
+    { typeName: 'Exhibition', description: 'Display or showcase of products/services' },
+  ];
+
+  for (const eventType of eventTypes) {
+    await prisma.eventType.upsert({
+      where: { typeName: eventType.typeName },
+      update: { description: eventType.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName: eventType.typeName,
+        description: eventType.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Event types created successfully');
+
+  // Create event categories
+  console.log('📁 Creating event categories...');
+  const eventCategories = [
+    { categoryName: 'Technology', description: 'Tech-related events' },
+    { categoryName: 'Business', description: 'Business and entrepreneurship events' },
+    { categoryName: 'Education', description: 'Educational events' },
+    { categoryName: 'Networking', description: 'Professional networking events' },
+    { categoryName: 'Government', description: 'Government and policy events' },
+  ];
+
+  for (const eventCategory of eventCategories) {
+    await prisma.eventCategory.upsert({
+      where: { categoryName: eventCategory.categoryName },
+      update: { description: eventCategory.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        categoryName: eventCategory.categoryName,
+        description: eventCategory.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Event categories created successfully');
+
+  // Create event modes
+  console.log('🎯 Creating event modes...');
+  const eventModes = [
+    { modeName: 'Physical', description: 'In-person event at a venue' },
+    { modeName: 'Virtual', description: 'Online/virtual event' },
+    { modeName: 'Hybrid', description: 'Combination of physical and virtual' },
+  ];
+
+  for (const eventMode of eventModes) {
+    await prisma.eventMode.upsert({
+      where: { modeName: eventMode.modeName },
+      update: { description: eventMode.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        modeName: eventMode.modeName,
+        description: eventMode.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Event modes created successfully');
+
   // Create admin user with explicit UUID
   console.log('👤 Creating admin user...');
   const adminUserId = randomUUID();
@@ -543,6 +619,9 @@ async function main() {
   console.log(
     '✅ 3 divisions created (Headquarters, Information Technology, Human Resources)',
   );
+  console.log('✅ 5 event types created (Conference, Workshop, Seminar, Training, Exhibition)');
+  console.log('✅ 5 event categories created (Technology, Business, Education, Networking, Government)');
+  console.log('✅ 3 event modes created (Physical, Virtual, Hybrid)');
   console.log('✅ 5 users created:');
   console.log('   - admin@example.com / Admin@123 (Admin, Headquarters)');
   console.log('   - manager@example.com / Manager@123 (Manager, Headquarters)');
