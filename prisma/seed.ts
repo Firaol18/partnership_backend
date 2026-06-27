@@ -44,6 +44,86 @@ async function main() {
     { resource: 'profile', action: 'read' },
     { resource: 'profile', action: 'update' },
     { resource: 'profile', action: 'change-password' },
+
+    // Auth permissions
+    { resource: 'auth', action: 'login' },
+    { resource: 'auth', action: 'register' },
+    { resource: 'auth', action: 'refresh' },
+    { resource: 'auth', action: 'logout' },
+    { resource: 'auth', action: 'verify-email' },
+
+    // Division permissions
+    { resource: 'divisions', action: 'read' },
+    { resource: 'divisions', action: 'create' },
+    { resource: 'divisions', action: 'update' },
+    { resource: 'divisions', action: 'delete' },
+    { resource: 'divisions', action: 'manage' },
+    { resource: 'divisions', action: 'assign-director' },
+    { resource: 'divisions', action: 'remove-director' },
+
+    // Event permissions
+    { resource: 'events', action: 'read' },
+    { resource: 'events', action: 'create' },
+    { resource: 'events', action: 'update' },
+    { resource: 'events', action: 'delete' },
+    { resource: 'events', action: 'manage' },
+    { resource: 'events', action: 'add-participant' },
+    { resource: 'events', action: 'remove-participant' },
+    { resource: 'events', action: 'add-eaii-participant' },
+    { resource: 'events', action: 'remove-eaii-participant' },
+    { resource: 'events', action: 'add-budget' },
+    { resource: 'events', action: 'update-budget' },
+    { resource: 'events', action: 'create-outcome' },
+    { resource: 'events', action: 'read-outcomes' },
+    { resource: 'events', action: 'update-outcome' },
+    { resource: 'events', action: 'delete-outcome' },
+    { resource: 'events', action: 'verify' },
+    { resource: 'events', action: 'review' },
+
+    // Permission permissions
+    { resource: 'permissions', action: 'read' },
+    { resource: 'permissions', action: 'assign' },
+    { resource: 'permissions', action: 'revoke' },
+    { resource: 'permissions', action: 'activate' },
+    { resource: 'permissions', action: 'deactivate' },
+    { resource: 'permissions', action: 'toggle-active' },
+    { resource: 'permissions', action: 'permanent-delete' },
+
+    // Role permissions
+    { resource: 'roles', action: 'read' },
+    { resource: 'roles', action: 'create' },
+    { resource: 'roles', action: 'update' },
+    { resource: 'roles', action: 'delete' },
+    { resource: 'roles', action: 'manage' },
+    { resource: 'roles', action: 'assign-permission' },
+    { resource: 'roles', action: 'remove-permission' },
+    { resource: 'roles', action: 'assign-permissions' },
+    { resource: 'roles', action: 'remove-permissions' },
+
+    // User permissions
+    { resource: 'users', action: 'read' },
+    { resource: 'users', action: 'create' },
+    { resource: 'users', action: 'update' },
+    { resource: 'users', action: 'delete' },
+    { resource: 'users', action: 'manage' },
+    { resource: 'users', action: 'verify-email' },
+    { resource: 'users', action: 'permanent-delete' },
+
+    // Visit permissions
+    { resource: 'visits', action: 'read' },
+    { resource: 'visits', action: 'create' },
+    { resource: 'visits', action: 'update' },
+    { resource: 'visits', action: 'delete' },
+    { resource: 'visits', action: 'manage' },
+    { resource: 'visits', action: 'add-delegate' },
+    { resource: 'visits', action: 'remove-delegate' },
+    { resource: 'visits', action: 'update-delegate-status' },
+    { resource: 'visits', action: 'create-outcome' },
+    { resource: 'visits', action: 'read-outcomes' },
+    { resource: 'visits', action: 'update-outcome' },
+    { resource: 'visits', action: 'delete-outcome' },
+    { resource: 'visits', action: 'verify' },
+    { resource: 'visits', action: 'review' },
   ];
 
   console.log('📝 Creating permissions...');
