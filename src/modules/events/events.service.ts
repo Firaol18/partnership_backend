@@ -543,6 +543,37 @@ export class EventsService {
     return this.findOne(eventId);
   }
 
+  async createBudget(
+    eventId: string,
+    budgetData: CreateBudgetDto,
+  ): Promise<EventResponseDto> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId, deletedAt: null },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    await this.prisma.eventBudget.create({
+      data: {
+        budgetUid: crypto.randomUUID(),
+        eventId,
+        estimatedBudget: budgetData.estimatedBudget
+          ? new Prisma.Decimal(budgetData.estimatedBudget)
+          : null,
+        actualBudget: budgetData.actualBudget
+          ? new Prisma.Decimal(budgetData.actualBudget)
+          : null,
+        fundingSource: budgetData.fundingSource,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
+    return this.findOne(eventId);
+  }
+
   async updateBudget(
     eventId: string,
     budgetData: CreateBudgetDto,

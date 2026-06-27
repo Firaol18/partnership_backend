@@ -186,6 +186,21 @@ export class EventsController {
     await this.eventsService.removeEaiiParticipant(id, userId);
   }
 
+  @Post(':id/budget')
+  @ApiOperation({ summary: 'Add budget to event' })
+  @ApiResponse({
+    status: 200,
+    description: 'Budget created successfully',
+    type: EventResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async createBudget(
+    @Param('id') id: string,
+    @Body() budgetData: CreateBudgetDto,
+  ): Promise<EventResponseDto> {
+    return this.eventsService.createBudget(id, budgetData);
+  }
+
   @Patch(':id/budget')
   @ApiOperation({ summary: 'Update event budget' })
   @ApiResponse({

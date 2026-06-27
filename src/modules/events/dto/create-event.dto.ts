@@ -6,7 +6,7 @@ import {
   IsInt,
   IsDateString,
   IsEnum,
-  IsDecimal,
+  IsNumber,
   IsArray,
   IsEmail,
   MinLength,
@@ -64,12 +64,12 @@ export class CreateEaiiParticipantDto {
 export class CreateBudgetDto {
   @ApiProperty({ example: 10000.0, required: false })
   @IsOptional()
-  @IsDecimal()
+  @IsNumber()
   estimatedBudget?: number;
 
   @ApiProperty({ example: 9500.0, required: false })
   @IsOptional()
-  @IsDecimal()
+  @IsNumber()
   actualBudget?: number;
 
   @ApiProperty({ example: 'Government Grant', required: false })
