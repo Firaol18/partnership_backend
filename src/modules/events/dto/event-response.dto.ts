@@ -189,8 +189,8 @@ export class EventResponseDto {
   @ApiProperty({ type: BudgetResponseDto, nullable: true })
   budget?: BudgetResponseDto;
 
-  @ApiProperty({ type: OutcomeResponseDto, nullable: true })
-  outcome?: OutcomeResponseDto;
+  @ApiProperty({ type: [OutcomeResponseDto] })
+  outcomes?: OutcomeResponseDto[];
 
   @ApiProperty()
   createdBy: {

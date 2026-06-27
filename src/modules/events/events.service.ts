@@ -10,6 +10,7 @@ import {
   CreateParticipantDto,
   CreateBudgetDto,
 } from './dto/create-event.dto';
+import { CreateOutcomeDto } from './dto/create-outcome.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { QueryEventsDto } from './dto/query-events.dto';
 import { EventResponseDto } from './dto/event-response.dto';
@@ -593,9 +594,9 @@ export class EventsService {
     return this.findOne(eventId);
   }
 
-  async updateOutcome(
+  async createOutcome(
     eventId: string,
-    outcomeData: any,
+    data: CreateOutcomeDto,
   ): Promise<EventResponseDto> {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId, deletedAt: null },
@@ -605,37 +606,98 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
-    const existingOutcome = await this.prisma.eventOutcome.findFirst({
-      where: { eventId, deletedAt: null },
+    await this.prisma.eventOutcome.create({
+      data: {
+        outcomeUid: crypto.randomUUID(),
+        eventId,
+        keyDiscussions: data.keyDiscussions,
+        agreementsReached: data.agreementsReached,
+        actionPoints: data.actionPoints,
+        objectivesAchieved: data.objectivesAchieved,
+        recommendations: data.recommendations,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     });
 
-    if (existingOutcome) {
-      await this.prisma.eventOutcome.update({
-        where: { id: existingOutcome.id },
-        data: {
-          keyDiscussions: outcomeData.keyDiscussions,
-          agreementsReached: outcomeData.agreementsReached,
-          actionPoints: outcomeData.actionPoints,
-          objectivesAchieved: outcomeData.objectivesAchieved,
-          recommendations: outcomeData.recommendations,
-          updatedAt: new Date(),
-        },
-      });
-    } else {
-      await this.prisma.eventOutcome.create({
-        data: {
-          outcomeUid: crypto.randomUUID(),
-          eventId,
-          keyDiscussions: outcomeData.keyDiscussions,
-          agreementsReached: outcomeData.agreementsReached,
-          actionPoints: outcomeData.actionPoints,
-          objectivesAchieved: outcomeData.objectivesAchieved,
-          recommendations: outcomeData.recommendations,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      });
+    return this.findOne(eventId);
+  }
+
+  async findOutcomes(eventId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId, deletedAt: null },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
     }
+
+    return this.prisma.eventOutcome.findMany({
+      where: { eventId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateOutcome(
+    eventId: string,
+    outcomeId: string,
+    data: CreateOutcomeDto,
+  ): Promise<EventResponseDto> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId, deletedAt: null },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const outcome = await this.prisma.eventOutcome.findFirst({
+      where: { id: outcomeId, eventId, deletedAt: null },
+    });
+
+    if (!outcome) {
+      throw new NotFoundException('Outcome not found');
+    }
+
+    await this.prisma.eventOutcome.update({
+      where: { id: outcome.id },
+      data: {
+        keyDiscussions: data.keyDiscussions,
+        agreementsReached: data.agreementsReached,
+        actionPoints: data.actionPoints,
+        objectivesAchieved: data.objectivesAchieved,
+        recommendations: data.recommendations,
+        updatedAt: new Date(),
+      },
+    });
+
+    return this.findOne(eventId);
+  }
+
+  async removeOutcome(
+    eventId: string,
+    outcomeId: string,
+  ): Promise<EventResponseDto> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId, deletedAt: null },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const outcome = await this.prisma.eventOutcome.findFirst({
+      where: { id: outcomeId, eventId, deletedAt: null },
+    });
+
+    if (!outcome) {
+      throw new NotFoundException('Outcome not found');
+    }
+
+    await this.prisma.eventOutcome.update({
+      where: { id: outcome.id },
+      data: { deletedAt: new Date() },
+    });
 
     return this.findOne(eventId);
   }
@@ -816,7 +878,7 @@ export class EventsService {
       participants: event.participants,
       eaiiParticipants: event.eaiiParticipants,
       budget: event.budgets?.[0],
-      outcome: event.outcomes?.[0],
+      outcomes: event.outcomes,
       createdBy: event.creator,
     };
   }

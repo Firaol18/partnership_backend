@@ -27,6 +27,7 @@ import {
   CreateEaiiParticipantDto,
   CreateBudgetDto,
 } from './dto/create-event.dto';
+import { CreateOutcomeDto } from './dto/create-outcome.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { QueryEventsDto } from './dto/query-events.dto';
 import { EventResponseDto } from './dto/event-response.dto';
@@ -200,19 +201,75 @@ export class EventsController {
     return this.eventsService.updateBudget(id, budgetData);
   }
 
-  @Patch(':id/outcome')
+  @Get(':id/outcomes')
+  @ApiOperation({ summary: 'Get all outcomes for an event' })
+  @ApiResponse({ status: 200, description: 'Outcomes retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async findOutcomes(@Param('id') id: string) {
+    return this.eventsService.findOutcomes(id);
+  }
+
+  @Post(':id/outcomes')
+  @ApiOperation({ summary: 'Create outcome for event' })
+  @ApiResponse({
+    status: 200,
+    description: 'Outcome created successfully',
+    type: EventResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async createOutcome(
+    @Param('id') id: string,
+    @Body() outcomeData: CreateOutcomeDto,
+  ): Promise<EventResponseDto> {
+    return this.eventsService.createOutcome(id, outcomeData);
+  }
+
+  @Patch(':id/outcomes/:outcomeId')
   @ApiOperation({ summary: 'Update event outcome' })
   @ApiResponse({
     status: 200,
     description: 'Outcome updated successfully',
     type: EventResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'Event not found' })
+  @ApiResponse({ status: 404, description: 'Outcome not found' })
   async updateOutcome(
     @Param('id') id: string,
-    @Body() outcomeData: any,
+    @Param('outcomeId') outcomeId: string,
+    @Body() outcomeData: CreateOutcomeDto,
   ): Promise<EventResponseDto> {
-    return this.eventsService.updateOutcome(id, outcomeData);
+    return this.eventsService.updateOutcome(id, outcomeId, outcomeData);
+  }
+
+  @Delete(':id/outcomes/:outcomeId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Soft delete event outcome' })
+  @ApiResponse({ status: 204, description: 'Outcome deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Outcome not found' })
+  async removeOutcome(
+    @Param('id') id: string,
+    @Param('outcomeId') outcomeId: string,
+  ): Promise<void> {
+    await this.eventsService.removeOutcome(id, outcomeId);
+  }
+
+  @Patch(':id/outcome')
+  @ApiOperation({ summary: 'Update event outcome (legacy)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Outcome updated successfully',
+    type: EventResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async updateOutcomeLegacy(
+    @Param('id') id: string,
+    @Body() outcomeData: CreateOutcomeDto,
+  ): Promise<EventResponseDto> {
+    const outcomes = await this.eventsService.findOutcomes(id);
+    const firstOutcome = outcomes[0];
+    if (firstOutcome) {
+      return this.eventsService.updateOutcome(id, firstOutcome.id, outcomeData);
+    }
+    return this.eventsService.createOutcome(id, outcomeData);
   }
 
   @Patch(':id/verify')
