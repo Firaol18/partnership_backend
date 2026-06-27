@@ -137,6 +137,12 @@ model User {
   uploadedDocuments Document[] @relation("DocumentUploader")
   updatedDocuments  Document[] @relation("DocumentUpdater")
 
+  // Visit relations
+  focalPersonVisits Visit[] @relation("VisitFocalPerson")
+  createdVisits     Visit[] @relation("VisitCreator")
+  reviewedVisits    Visit[] @relation("VisitReviewer")
+  verifiedVisits    Visit[] @relation("VisitVerifier")
+
   // Event relations - using different relation names to avoid conflicts
   createdEvents  Event[] @relation("EventCreator")
   reviewedEvents Event[] @relation("EventReviewer")
@@ -439,4 +445,143 @@ model EventOutcome {
 
   @@index([eventId], map: "idx_event_outcomes_event")
   @@map("event_outcomes")
+}
+
+// Add to your prisma/schema.prisma
+
+model VisitType {
+  id          String  @id @default(uuid()) @db.Uuid
+  typeName    String  @unique @map("type_name") @db.VarChar(50)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  visits Visit[]
+
+  @@index([typeName], map: "idx_visit_types_name")
+  @@map("visit_types")
+}
+
+model VisitCategory {
+  id           String  @id @default(uuid()) @db.Uuid
+  categoryName String  @unique @map("category_name") @db.VarChar(50)
+  description  String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  visits Visit[]
+
+  @@map("visit_categories")
+}
+
+model Visit {
+  id       String @id @default(uuid()) @db.Uuid
+  visitUid String @unique @default(uuid()) @map("visit_uid") @db.Uuid
+  recordId String @unique @map("record_id") @db.VarChar(50)
+  title    String @db.VarChar(255)
+
+  visitTypeId String    @map("visit_type_id") @db.Uuid
+  visitType   VisitType @relation(fields: [visitTypeId], references: [id])
+
+  visitCategoryId String        @map("visit_category_id") @db.Uuid
+  visitCategory   VisitCategory @relation(fields: [visitCategoryId], references: [id])
+
+  visitDate DateTime @map("visit_date") @db.Date
+
+  hostOrganization     String  @map("host_organization") @db.VarChar(255)
+  visitingOrganization String  @map("visiting_organization") @db.VarChar(255)
+  visitLocation        String? @map("visit_location") @db.VarChar(255)
+
+  purpose String? @db.Text
+
+  focalPersonId String @map("focal_person_id") @db.Uuid
+  focalPerson   User   @relation("VisitFocalPerson", fields: [focalPersonId], references: [id])
+
+  partnerId String? @map("partner_id") @db.Uuid
+  // partner   Partner? @relation(fields: [partnerId], references: [id])
+
+  status String @default("Planned") @db.VarChar(50)
+
+  createdBy String @map("created_by") @db.Uuid
+  creator   User   @relation("VisitCreator", fields: [createdBy], references: [id])
+
+  reviewedBy  String?   @map("reviewed_by") @db.Uuid
+  reviewer    User?     @relation("VisitReviewer", fields: [reviewedBy], references: [id])
+  reviewNotes String?   @map("review_notes") @db.Text
+  reviewDate  DateTime? @map("review_date")
+
+  verifiedBy        String?   @map("verified_by") @db.Uuid
+  verifier          User?     @relation("VisitVerifier", fields: [verifiedBy], references: [id])
+  verificationNotes String?   @map("verification_notes") @db.Text
+  verificationDate  DateTime? @map("verification_date")
+  verifiedStatus    String    @default("pending") @map("verified_status") @db.VarChar(20)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  delegates VisitDelegationList[]
+  outcomes  VisitOutcome[]
+
+  @@index([recordId], map: "idx_visits_record_id")
+  @@index([title], map: "idx_visits_title")
+  @@index([visitDate], map: "idx_visits_date")
+  @@index([visitTypeId], map: "idx_visits_type")
+  @@index([visitCategoryId], map: "idx_visits_category")
+  @@index([partnerId], map: "idx_visits_partner")
+  @@index([status], map: "idx_visits_status")
+  @@index([hostOrganization], map: "idx_visits_host")
+  @@index([visitingOrganization], map: "idx_visits_visiting")
+  @@index([focalPersonId], map: "idx_visits_focal_person")
+  @@index([createdBy], map: "idx_visits_creator")
+  @@map("visits")
+}
+
+model VisitDelegationList {
+  id          String @id @default(uuid()) @db.Uuid
+  delegateUid String @unique @default(uuid()) @map("delegate_uid") @db.Uuid
+
+  visitId String @map("visit_id") @db.Uuid
+  visit   Visit  @relation(fields: [visitId], references: [id])
+
+  fullName         String  @map("full_name") @db.VarChar(255)
+  position         String? @db.VarChar(255)
+  organizationName String  @map("organization_name") @db.VarChar(255)
+  country          String? @db.VarChar(100)
+  email            String  @db.VarChar(255)
+  phoneNumber      String? @map("phone_number") @db.VarChar(50)
+  status           String  @default("Pending") @db.VarChar(50)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([visitId], map: "idx_visit_delegates_visit")
+  @@index([organizationName], map: "idx_visit_delegates_org")
+  @@index([status], map: "idx_visit_delegates_status")
+  @@map("visit_delegation_list")
+}
+
+model VisitOutcome {
+  id         String @id @default(uuid()) @db.Uuid
+  outcomeUid String @unique @default(uuid()) @map("outcome_uid") @db.Uuid
+
+  visitId String @map("visit_id") @db.Uuid
+  visit   Visit  @relation(fields: [visitId], references: [id])
+
+  keyTopicsDiscussed      String? @map("key_topics_discussed") @db.Text
+  opportunitiesIdentified String? @map("opportunities_identified") @db.Text
+  agreementsReached       String? @map("agreements_reached") @db.Text
+  followUpActions         String? @map("follow_up_actions") @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([visitId], map: "idx_visit_outcomes_visit")
+  @@map("visit_outcomes")
 }

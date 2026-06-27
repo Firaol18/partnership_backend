@@ -353,6 +353,58 @@ async function main() {
 
   console.log('✅ Event modes created successfully');
 
+  // Create visit types
+  console.log('📋 Creating visit types...');
+  const visitTypes = [
+    { typeName: 'Official Visit', description: 'Formal visit with official delegation' },
+    { typeName: 'Working Visit', description: 'Working-level visit for technical discussions' },
+    { typeName: 'Fact-Finding Visit', description: 'Visit to gather information and assess conditions' },
+    { typeName: 'Monitoring Visit', description: 'Visit to monitor ongoing projects or activities' },
+    { typeName: 'Inspection Visit', description: 'Visit for inspection and quality assurance' },
+  ];
+
+  for (const visitType of visitTypes) {
+    await prisma.visitType.upsert({
+      where: { typeName: visitType.typeName },
+      update: { description: visitType.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName: visitType.typeName,
+        description: visitType.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Visit types created successfully');
+
+  // Create visit categories
+  console.log('📁 Creating visit categories...');
+  const visitCategories = [
+    { categoryName: 'Domestic', description: 'Visit within the country' },
+    { categoryName: 'International', description: 'Visit to foreign countries' },
+    { categoryName: 'Field', description: 'Visit to field locations or project sites' },
+    { categoryName: 'Office', description: 'Visit to office locations' },
+    { categoryName: 'Virtual', description: 'Virtual/remote visit' },
+  ];
+
+  for (const visitCategory of visitCategories) {
+    await prisma.visitCategory.upsert({
+      where: { categoryName: visitCategory.categoryName },
+      update: { description: visitCategory.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        categoryName: visitCategory.categoryName,
+        description: visitCategory.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Visit categories created successfully');
+
   // Create admin user with explicit UUID
   console.log('👤 Creating admin user...');
   const adminUserId = randomUUID();
@@ -622,6 +674,8 @@ async function main() {
   console.log('✅ 5 event types created (Conference, Workshop, Seminar, Training, Exhibition)');
   console.log('✅ 5 event categories created (Technology, Business, Education, Networking, Government)');
   console.log('✅ 3 event modes created (Physical, Virtual, Hybrid)');
+  console.log('✅ 5 visit types created (Official Visit, Working Visit, Fact-Finding Visit, Monitoring Visit, Inspection Visit)');
+  console.log('✅ 5 visit categories created (Domestic, International, Field, Office, Virtual)');
   console.log('✅ 5 users created:');
   console.log('   - admin@example.com / Admin@123 (Admin, Headquarters)');
   console.log('   - manager@example.com / Manager@123 (Manager, Headquarters)');

@@ -18,6 +18,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { DivisionsModule } from './modules/divisions/divisions.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { EventsModule } from './modules/events/events.module';
+import { VisitsModule } from './modules/visits/visits.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -52,6 +53,7 @@ import appConfig from './config/app.config';
     DivisionsModule,
     PermissionsModule,
     EventsModule,
+    VisitsModule,
   ],
   providers: [
     {
