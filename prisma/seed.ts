@@ -357,6 +357,85 @@ async function main() {
 
   console.log('✅ Divisions created successfully');
 
+  // Create partner registration lookup tables
+  console.log('🤝 Creating partner lookup tables...');
+  const partnerLookupPrisma: any = prisma;
+
+  const organizationTypes = [
+    'Government',
+    'University',
+    'Research Institute',
+    'Private Company',
+    'Startup',
+    'Development Partner',
+    'NGO',
+    'International Organization',
+    'Embassy',
+    'Civil Society',
+    'Other',
+  ];
+
+  for (const typeName of organizationTypes) {
+    await partnerLookupPrisma.organizationType.upsert({
+      where: { typeName },
+      update: { updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  const partnerClassifications = [
+    'Strategic Partner',
+    'Technical Partner',
+    'Academic Partner',
+    'Funding Partner',
+    'Industry Partner',
+    'Innovation Partner',
+    'Implementing Partner',
+    'Other',
+  ];
+
+  for (const classificationName of partnerClassifications) {
+    await partnerLookupPrisma.partnerClassification.upsert({
+      where: { classificationName },
+      update: { updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        classificationName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  const partnerStatuses = [
+    'Prospect',
+    'Under Discussion',
+    'Active',
+    'Dormant',
+    'Expired',
+    'Terminated',
+  ];
+
+  for (const statusName of partnerStatuses) {
+    await partnerLookupPrisma.partnerStatus.upsert({
+      where: { statusName },
+      update: { updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        statusName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Partner lookup tables created successfully');
+
   // Create event types
   console.log('📅 Creating event types...');
   const eventTypes = [
