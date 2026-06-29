@@ -616,6 +616,34 @@ async function main() {
 
   console.log('✅ Opportunity sources created successfully');
 
+  // Create agreement types
+  console.log('📜 Creating agreement types...');
+  const agreementTypes = [
+    { typeName: 'MoU', description: 'Memorandum of Understanding' },
+    { typeName: 'MoA', description: 'Memorandum of Agreement' },
+    { typeName: 'Contract', description: 'Formal contract agreement' },
+    { typeName: 'Grant Agreement', description: 'Funding or grant agreement' },
+    { typeName: 'Research Agreement', description: 'Collaborative research agreement' },
+    { typeName: 'NDA', description: 'Non-Disclosure Agreement' },
+    { typeName: 'Other', description: 'Other agreement types' },
+  ];
+
+  for (const type of agreementTypes) {
+    await prisma.agreementType.upsert({
+      where: { typeName: type.typeName },
+      update: { description: type.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName: type.typeName,
+        description: type.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Agreement types created successfully');
+
   // Create admin user with explicit UUID
   console.log('👤 Creating admin user...');
   const adminUserId = randomUUID();
@@ -889,6 +917,7 @@ async function main() {
   console.log('✅ 5 visit categories created (Domestic, International, Field, Office, Virtual)');
   console.log('✅ 5 communication types created (Email, Letter, Memo, Meeting Minutes, Phone Call)');
   console.log('✅ 6 engagement types created (Partnership Agreement, MoU, Joint Project, Technical Assistance, Capacity Building, Research Collaboration)');
+  console.log('✅ 7 agreement types created (MoU, MoA, Contract, Grant Agreement, Research Agreement, NDA, Other)');
   console.log('✅ 5 opportunity categories created (Technology, Research & Development, Capacity Building, Infrastructure, Funding & Grants)');
   console.log('✅ 4 strategic importance levels created (Critical, High, Medium, Low)');
   console.log('✅ 6 opportunity sources created (Partner Proposal, Internal Identification, Government Initiative, International Organization, Donor Agency, Market Research)');

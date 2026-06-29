@@ -164,6 +164,15 @@ model User {
   createdEngagements            Engagement[]                   @relation("EngagementCreator")
   approvedEngagements           Engagement[]                   @relation("EngagementApprover")
 
+  createdAgreements       Agreement[] @relation("AgreementCreator")
+  legalReviewedAgreements Agreement[] @relation("AgreementLegalReviewer")
+  verifiedAgreements      Agreement[] @relation("AgreementVerifier")
+  reviewedAgreements      Agreement[] @relation("AgreementReviewer")
+  approvedAgreements      Agreement[] @relation("AgreementApprover")
+  agreementAmendmentsApproved AgreementAmendment[] @relation("AmendmentApprover")
+  agreementAmendmentsCreated  AgreementAmendment[] @relation("AmendmentCreator")
+  agreementReviews        AgreementReviewHistory[]
+
   @@index([email], map: "idx_users_email")
   @@index([status], map: "idx_users_status")
   @@index([divisionId], map: "idx_users_division")
@@ -719,6 +728,7 @@ model PartnerOpportunity {
   userId                    String?                    @db.Uuid
   opportunityCommunications OpportunityCommunication[]
   engagements               Engagement[]
+  agreements                Agreement[]
 
   @@index([opportunityUid], map: "idx_opportunity_uid")
   @@index([partnerId], map: "idx_opportunity_partner")
@@ -844,6 +854,7 @@ model Engagement {
   eaiiRepresentatives  EngagementEaiiRepresentative[]
   user                 User?                           @relation(fields: [userId], references: [id])
   userId               String?                         @db.Uuid
+  agreements           Agreement[]
 
   @@index([recordId], map: "idx_engagements_record_id")
   @@index([opportunityId], map: "idx_engagements_opportunity")
@@ -894,4 +905,181 @@ model EngagementEaiiRepresentative {
   @@index([engagementId], map: "idx_eng_eaii_rep_engagement")
   @@index([userId], map: "idx_eng_eaii_rep_user")
   @@map("engagement_eaii_representatives")
+}
+
+model AgreementType {
+  id          String  @id @default(uuid()) @db.Uuid
+  typeName    String  @unique @map("type_name") @db.VarChar(50)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  agreements Agreement[]
+
+  @@index([typeName], map: "idx_agreement_types_name")
+  @@map("agreement_types")
+}
+
+model Agreement {
+  id                         String   @id @default(uuid()) @db.Uuid
+  agreementUid               String   @unique @default(uuid()) @map("agreement_uid") @db.Uuid
+  agreementId                String   @unique @map("agreement_id") @db.VarChar(50)
+
+  opportunityId              String   @map("opportunity_id") @db.Uuid
+  opportunity                PartnerOpportunity @relation(fields: [opportunityId], references: [id])
+
+  engagementId               String?  @map("engagement_id") @db.Uuid
+  engagement                 Engagement? @relation(fields: [engagementId], references: [id])
+
+  partnerId                  String?  @map("partner_id") @db.Uuid
+
+  agreementTitle             String   @map("agreement_title") @db.VarChar(255)
+
+  agreementTypeId            String   @map("agreement_type_id") @db.Uuid
+  agreementType              AgreementType @relation(fields: [agreementTypeId], references: [id])
+
+  startDate                  DateTime @map("start_date") @db.Date
+  endDate                    DateTime @map("end_date") @db.Date
+  renewalDate                DateTime? @map("renewal_date") @db.Date
+
+  legalReviewStatus          String   @default("Pending") @map("legal_review_status") @db.VarChar(50)
+  legalReviewedById          String?  @map("legal_reviewed_by_id") @db.Uuid
+  legalReviewedBy            User?    @relation("AgreementLegalReviewer", fields: [legalReviewedById], references: [id])
+  legalReviewNotes           String?  @map("legal_review_notes") @db.Text
+  legalReviewDate            DateTime? @map("legal_review_date")
+  legalApproved              Boolean  @default(false) @map("legal_approved")
+
+  approvalStatus             String   @default("Draft") @map("approval_status") @db.VarChar(50)
+  approvedById               String?  @map("approved_by_id") @db.Uuid
+  approvedBy                 User?    @relation("AgreementApprover", fields: [approvedById], references: [id])
+  approvalNotes              String?  @map("approval_notes") @db.Text
+  approvalDate               DateTime? @map("approval_date")
+
+  reviewedById               String?  @map("reviewed_by_id") @db.Uuid
+  reviewer                   User?    @relation("AgreementReviewer", fields: [reviewedById], references: [id])
+  reviewNotes                String?  @map("review_notes") @db.Text
+  reviewDate                 DateTime? @map("review_date")
+
+  verifiedById               String?  @map("verified_by_id") @db.Uuid
+  verifier                   User?    @relation("AgreementVerifier", fields: [verifiedById], references: [id])
+  verificationNotes          String?  @map("verification_notes") @db.Text
+  verificationDate           DateTime? @map("verification_date")
+  verifiedStatus             String   @default("pending") @map("verified_status") @db.VarChar(20)
+
+  partnerName                String   @map("partner_name") @db.VarChar(255)
+  eaiiResponsibleDivision    String   @map("eaii_responsible_division") @db.VarChar(255)
+  eaiiResponsibleDirectorate String?  @map("eaii_responsible_directorate") @db.VarChar(255)
+
+  signatories                Json     @map("signatories")
+  signingDate                DateTime? @map("signing_date") @db.Date
+  signedVersionPath          String?  @map("signed_version_path") @db.Text
+
+  version                    Int      @default(1)
+  previousVersionId          String?  @map("previous_version_id") @db.Uuid
+  previousVersion            Agreement? @relation("AgreementVersions", fields: [previousVersionId], references: [id])
+  nextVersions               Agreement[] @relation("AgreementVersions")
+
+  status                     String   @default("DRAFT") @db.VarChar(50)
+  terminationNote            String?  @map("termination_note") @db.Text
+
+  createdById                String   @map("created_by_id") @db.Uuid
+  createdBy                  User     @relation("AgreementCreator", fields: [createdById], references: [id])
+
+  createdAt                  DateTime @default(now()) @map("created_at")
+  updatedAt                  DateTime @updatedAt @map("updated_at")
+  deletedAt                  DateTime? @map("deleted_at")
+
+  documents                  AgreementDocument[]
+  amendments                 AgreementAmendment[]
+  reviewHistory              AgreementReviewHistory[]
+
+  @@index([agreementId], map: "idx_agreements_agreement_id")
+  @@index([opportunityId], map: "idx_agreements_opportunity")
+  @@index([engagementId], map: "idx_agreements_engagement")
+  @@index([partnerId], map: "idx_agreements_partner")
+  @@index([agreementTypeId], map: "idx_agreements_type")
+  @@index([status], map: "idx_agreements_status")
+  @@index([startDate], map: "idx_agreements_start_date")
+  @@index([endDate], map: "idx_agreements_end_date")
+  @@index([signingDate], map: "idx_agreements_signing_date")
+  @@map("agreements")
+}
+
+model AgreementDocument {
+  id                String    @id @default(uuid()) @db.Uuid
+  agreementId       String    @map("agreement_id") @db.Uuid
+  agreement         Agreement @relation(fields: [agreementId], references: [id])
+  documentId        String    @map("document_id") @db.Uuid
+  documentCategory  String    @map("document_category") @db.VarChar(50)
+  isCurrentVersion  Boolean   @default(true) @map("is_current_version")
+  versionNumber     String?   @map("version_number") @db.VarChar(20)
+
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+
+  @@unique([agreementId, documentId], map: "idx_agr_doc_unique")
+  @@index([agreementId], map: "idx_agr_doc_agreement")
+  @@index([documentId], map: "idx_agr_doc_document")
+  @@index([documentCategory], map: "idx_agr_doc_category")
+  @@index([isCurrentVersion], map: "idx_agr_doc_current")
+  @@map("agreement_documents")
+}
+
+model AgreementAmendment {
+  id                 String    @id @default(uuid()) @db.Uuid
+  amendmentUid       String    @unique @default(uuid()) @map("amendment_uid") @db.Uuid
+  agreementId        String    @map("agreement_id") @db.Uuid
+  agreement          Agreement @relation(fields: [agreementId], references: [id])
+
+  amendmentTitle     String    @map("amendment_title") @db.VarChar(255)
+  amendmentDescription String? @map("amendment_description") @db.Text
+  amendmentDate      DateTime  @map("amendment_date") @db.Date
+  effectiveDate      DateTime  @map("effective_date") @db.Date
+
+  changedClauses     Json?     @map("changed_clauses")
+  reasonForAmendment String?   @map("reason_for_amendment") @db.Text
+
+  documentId         String?   @map("document_id") @db.Uuid
+
+  approvedById       String?   @map("approved_by_id") @db.Uuid
+  approvedBy         User?     @relation("AmendmentApprover", fields: [approvedById], references: [id])
+  approvedDate       DateTime? @map("approved_date") @db.Date
+  approvalStatus     String    @default("Pending") @map("approval_status") @db.VarChar(50)
+
+  createdById        String    @map("created_by_id") @db.Uuid
+  createdBy          User      @relation("AmendmentCreator", fields: [createdById], references: [id])
+
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  deletedAt          DateTime? @map("deleted_at")
+
+  @@index([agreementId], map: "idx_agr_amendments_agreement")
+  @@index([amendmentDate], map: "idx_agr_amendments_date")
+  @@index([documentId], map: "idx_agr_amendments_document")
+  @@index([approvalStatus], map: "idx_agr_amendments_status")
+  @@map("agreement_amendments")
+}
+
+model AgreementReviewHistory {
+  id           String    @id @default(uuid()) @db.Uuid
+  agreementId  String    @map("agreement_id") @db.Uuid
+  agreement    Agreement @relation(fields: [agreementId], references: [id])
+  reviewerId   String    @map("reviewer_id") @db.Uuid
+  reviewer     User      @relation(fields: [reviewerId], references: [id])
+
+  reviewType   String    @map("review_type") @db.VarChar(50)
+  reviewNotes  String?   @map("review_notes") @db.Text
+  reviewStatus String    @map("review_status") @db.VarChar(20)
+  reviewDate   DateTime  @map("review_date")
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([agreementId], map: "idx_agr_review_agreement")
+  @@index([reviewerId], map: "idx_agr_review_reviewer")
+  @@index([reviewType], map: "idx_agr_review_type")
+  @@index([reviewDate], map: "idx_agr_review_date")
+  @@map("agreement_review_history")
 }
