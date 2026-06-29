@@ -143,12 +143,26 @@ model User {
   reviewedVisits    Visit[] @relation("VisitReviewer")
   verifiedVisits    Visit[] @relation("VisitVerifier")
 
-  // Event relations - using different relation names to avoid conflicts
+  // Event relations
   createdEvents  Event[] @relation("EventCreator")
   reviewedEvents Event[] @relation("EventReviewer")
   verifiedEvents Event[] @relation("EventVerifier")
 
   eventEaiiParticipants EventEaiiParticipant[]
+  partnerOpportunities  PartnerOpportunity[]
+
+  // Opportunity relations
+  createdOpportunities      PartnerOpportunity[]       @relation("OpportunityCreator")
+  reviewedOpportunities     PartnerOpportunity[]       @relation("OpportunityReviewer")
+  verifiedOpportunities     PartnerOpportunity[]       @relation("OpportunityVerifier")
+  opportunityCommunications OpportunityCommunication[]
+  engagements               Engagement[]
+
+  // Engagement relations
+  engagementEaiiRepresentatives EngagementEaiiRepresentative[]
+  sentCommunications            OpportunityCommunication[]     @relation("CommunicationSender")
+  createdEngagements            Engagement[]                   @relation("EngagementCreator")
+  approvedEngagements           Engagement[]                   @relation("EngagementApprover")
 
   @@index([email], map: "idx_users_email")
   @@index([status], map: "idx_users_status")
@@ -584,4 +598,300 @@ model VisitOutcome {
 
   @@index([visitId], map: "idx_visit_outcomes_visit")
   @@map("visit_outcomes")
+}
+
+//here opportunity schema
+
+model OpportunityCategory {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique @db.VarChar(50)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  opportunities PartnerOpportunity[]
+
+  @@map("opportunity_categories")
+}
+
+model StrategicImportanceLevel {
+  id          String  @id @default(uuid()) @db.Uuid
+  levelName   String  @unique @map("level_name") @db.VarChar(50)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  opportunities PartnerOpportunity[]
+
+  @@map("strategic_importance_levels")
+}
+
+model OpportunitySource {
+  id          String  @id @default(uuid()) @db.Uuid
+  sourceName  String  @unique @map("source_name") @db.VarChar(100)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  opportunities PartnerOpportunity[]
+
+  @@map("opportunity_sources")
+}
+
+model PartnerOpportunity {
+  id             String   @id @default(uuid()) @db.Uuid
+  opportunityUid String   @unique @default(uuid()) @map("opportunity_uid") @db.Uuid
+  title          String   @db.VarChar(255)
+  dateIdentified DateTime @map("date_identified") @db.Date
+
+  // Partner information
+  partnerId        String? @map("partner_id") @db.Uuid
+  partnerName      String  @map("partner_name") @db.VarChar(255)
+  partnerAcronym   String? @map("partner_acronym") @db.VarChar(50)
+  organizationType String? @map("organization_type") @db.VarChar(100)
+  country          String? @db.VarChar(100)
+  region           String? @db.VarChar(100)
+  city             String? @db.VarChar(100)
+  website          String? @db.VarChar(255)
+
+  contactPersonName String? @map("contact_person_name") @db.VarChar(255)
+  contactPosition   String? @map("contact_position") @db.VarChar(255)
+  contactEmail      String? @map("contact_email") @db.VarChar(255)
+  contactPhone      String? @map("contact_phone") @db.VarChar(50)
+
+  existingRelationship String? @map("existing_relationship") @db.VarChar(50)
+  interestArea         String? @map("interest_area") @db.Text
+
+  strategicImportanceLevelId String?                   @map("strategic_importance_level_id") @db.Uuid
+  strategicImportanceLevel   StrategicImportanceLevel? @relation(fields: [strategicImportanceLevelId], references: [id])
+
+  opportunityCategoryId String?              @map("opportunity_category_id") @db.Uuid
+  opportunityCategory   OpportunityCategory? @relation(fields: [opportunityCategoryId], references: [id])
+
+  opportunitySourceId String?            @map("opportunity_source_id") @db.Uuid
+  opportunitySource   OpportunitySource? @relation(fields: [opportunitySourceId], references: [id])
+
+  opportunityBackground     String? @map("opportunity_background") @db.Text
+  opportunityDescription    String? @map("opportunity_description") @db.Text
+  proposedCollaborationArea String? @map("proposed_collaboration_area") @db.Text
+  expectedOutcome           String? @map("expected_outcome") @db.Text
+
+  strategicAlignment String? @map("strategic_alignment") @db.Text // JSON array
+  expectedBenefits   String? @map("expected_benefits") @db.Text // JSON array
+
+  // Workflow tracking
+  verificationNotes String? @map("verification_notes") @db.Text
+  reviewNotes       String? @map("review_notes") @db.Text
+  approvalNotes     String? @map("approval_notes") @db.Text
+
+  screenedAt DateTime? @map("screened_at")
+  verifiedAt DateTime? @map("verified_at")
+  reviewedAt DateTime? @map("reviewed_at")
+  approvedAt DateTime? @map("approved_at")
+
+  createdBy String @map("created_by") @db.Uuid
+  creator   User   @relation("OpportunityCreator", fields: [createdBy], references: [id])
+
+  reviewedBy String? @map("reviewed_by") @db.Uuid
+  reviewer   User?   @relation("OpportunityReviewer", fields: [reviewedBy], references: [id])
+
+  verifiedBy String? @map("verified_by") @db.Uuid
+  verifier   User?   @relation("OpportunityVerifier", fields: [verifiedBy], references: [id])
+
+  status String @default("Draft") @db.VarChar(50)
+
+  convertedToEntityType String? @map("converted_to_entity_type") @db.VarChar(50)
+  convertedToEntityId   String? @map("converted_to_entity_id") @db.Uuid
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  // Relationships
+  // partner Partner? @relation(fields: [partnerId], references: [id])
+  user                      User?                      @relation(fields: [userId], references: [id])
+  userId                    String?                    @db.Uuid
+  opportunityCommunications OpportunityCommunication[]
+  engagements               Engagement[]
+
+  @@index([opportunityUid], map: "idx_opportunity_uid")
+  @@index([partnerId], map: "idx_opportunity_partner")
+  @@index([partnerName], map: "idx_opportunity_partner_name")
+  @@index([dateIdentified], map: "idx_opportunity_date")
+  @@index([opportunityCategoryId], map: "idx_opportunity_category")
+  @@index([strategicImportanceLevelId], map: "idx_opportunity_strategic_level")
+  @@index([status], map: "idx_opportunity_status")
+  @@index([createdBy], map: "idx_opportunity_creator")
+  @@map("partner_opportunities")
+}
+
+//here engagement started 
+
+model CommunicationType {
+  id          String  @id @default(uuid()) @db.Uuid
+  typeName    String  @unique @map("type_name") @db.VarChar(50)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  communications OpportunityCommunication[]
+
+  @@index([typeName], map: "idx_comm_types_name")
+  @@map("communication_types")
+}
+
+model OpportunityCommunication {
+  id               String @id @default(uuid()) @db.Uuid
+  communicationUid String @unique @default(uuid()) @map("communication_uid") @db.Uuid
+
+  opportunityId String             @map("opportunity_id") @db.Uuid
+  opportunity   PartnerOpportunity @relation(fields: [opportunityId], references: [id])
+
+  communicationTypeId String            @map("communication_type_id") @db.Uuid
+  communicationType   CommunicationType @relation(fields: [communicationTypeId], references: [id])
+
+  emailSubject   String   @map("email_subject") @db.VarChar(255)
+  emailRecipient String   @map("email_recipient") @db.VarChar(255)
+  emailBody      String   @map("email_body") @db.Text
+  sentDate       DateTime @map("sent_date")
+
+  ccRecipients   String? @map("cc_recipients") @db.Text // JSON array
+  bccRecipients  String? @map("bcc_recipients") @db.Text // JSON array
+  hasAttachments Boolean @default(false) @map("has_attachments")
+
+  sentBy String @map("sent_by") @db.Uuid
+  sender User   @relation("CommunicationSender", fields: [sentBy], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  user      User?     @relation(fields: [userId], references: [id])
+  userId    String?   @db.Uuid
+
+  @@index([opportunityId], map: "idx_comm_opportunity")
+  @@index([sentDate], map: "idx_comm_sent_date")
+  @@index([communicationTypeId], map: "idx_comm_type")
+  @@index([sentBy], map: "idx_comm_sender")
+  @@map("opportunity_communications")
+}
+
+model EngagementType {
+  id          String  @id @default(uuid()) @db.Uuid
+  typeName    String  @unique @map("type_name") @db.VarChar(100)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  engagements Engagement[]
+
+  @@index([typeName], map: "idx_engagement_types_name")
+  @@map("engagement_types")
+}
+
+model Engagement {
+  id            String @id @default(uuid()) @db.Uuid
+  engagementUid String @unique @default(uuid()) @map("engagement_uid") @db.Uuid
+  recordId      String @unique @map("record_id") @db.VarChar(50)
+
+  opportunityId String             @map("opportunity_id") @db.Uuid
+  opportunity   PartnerOpportunity @relation(fields: [opportunityId], references: [id])
+
+  engagementTypeId String         @map("engagement_type_id") @db.Uuid
+  engagementType   EngagementType @relation(fields: [engagementTypeId], references: [id])
+
+  engagementDate DateTime  @map("engagement_date") @db.Date
+  title          String    @db.VarChar(255)
+  location       String?   @db.VarChar(255)
+  startTime      DateTime? @map("start_time") @db.Time
+  endTime        DateTime? @map("end_time") @db.Time
+
+  // Discussion Summary
+  keyPoints     String @map("key_points") @db.Text
+  agreedActions String @map("agreed_actions") @db.Text
+  nextSteps     String @map("next_steps") @db.Text
+
+  // Follow-up Tracking
+  followUpRequired Boolean   @default(false) @map("follow_up_required")
+  followUpDate     DateTime? @map("follow_up_date") @db.Date
+  followUpNotes    String?   @map("follow_up_notes") @db.Text
+
+  status String @default("Draft") @db.VarChar(50)
+
+  // Workflow
+  createdBy String @map("created_by") @db.Uuid
+  creator   User   @relation("EngagementCreator", fields: [createdBy], references: [id])
+
+  approvedBy    String?   @map("approved_by") @db.Uuid
+  approver      User?     @relation("EngagementApprover", fields: [approvedBy], references: [id])
+  approvalNotes String?   @map("approval_notes") @db.Text
+  approvalDate  DateTime? @map("approval_date")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  externalParticipants EngagementExternalParticipant[]
+  eaiiRepresentatives  EngagementEaiiRepresentative[]
+  user                 User?                           @relation(fields: [userId], references: [id])
+  userId               String?                         @db.Uuid
+
+  @@index([recordId], map: "idx_engagements_record_id")
+  @@index([opportunityId], map: "idx_engagements_opportunity")
+  @@index([engagementDate], map: "idx_engagements_date")
+  @@index([engagementTypeId], map: "idx_engagements_type")
+  @@index([status], map: "idx_engagements_status")
+  @@index([createdBy], map: "idx_engagements_creator")
+  @@map("engagements")
+}
+
+model EngagementExternalParticipant {
+  id           String     @id @default(uuid()) @db.Uuid
+  engagementId String     @map("engagement_id") @db.Uuid
+  engagement   Engagement @relation(fields: [engagementId], references: [id])
+
+  fullName         String  @map("full_name") @db.VarChar(255)
+  organizationName String  @map("organization_name") @db.VarChar(255)
+  position         String? @db.VarChar(255)
+  email            String? @db.VarChar(255)
+  phoneNumber      String? @map("phone_number") @db.VarChar(50)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([engagementId], map: "idx_eng_ext_part_engagement")
+  @@index([organizationName], map: "idx_eng_ext_part_org")
+  @@map("engagement_external_participants")
+}
+
+model EngagementEaiiRepresentative {
+  id           String     @id @default(uuid()) @db.Uuid
+  engagementId String     @map("engagement_id") @db.Uuid
+  engagement   Engagement @relation(fields: [engagementId], references: [id])
+
+  userId String? @map("user_id") @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id])
+
+  fullName String  @map("full_name") @db.VarChar(255)
+  division String  @db.VarChar(100)
+  email    String  @db.VarChar(255)
+  role     String? @db.VarChar(100)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([engagementId], map: "idx_eng_eaii_rep_engagement")
+  @@index([userId], map: "idx_eng_eaii_rep_user")
+  @@map("engagement_eaii_representatives")
 }

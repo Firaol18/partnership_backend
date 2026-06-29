@@ -485,6 +485,137 @@ async function main() {
 
   console.log('✅ Visit categories created successfully');
 
+  // Create communication types
+  console.log('📧 Creating communication types...');
+  const communicationTypes = [
+    { typeName: 'Email', description: 'Email communication' },
+    { typeName: 'Letter', description: 'Formal letter correspondence' },
+    { typeName: 'Memo', description: 'Internal memorandum' },
+    { typeName: 'Meeting Minutes', description: 'Meeting minutes and proceedings' },
+    { typeName: 'Phone Call', description: 'Phone conversation record' },
+  ];
+
+  for (const commType of communicationTypes) {
+    await prisma.communicationType.upsert({
+      where: { typeName: commType.typeName },
+      update: { description: commType.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName: commType.typeName,
+        description: commType.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Communication types created successfully');
+
+  // Create engagement types
+  console.log('🤝 Creating engagement types...');
+  const engagementTypes = [
+    { typeName: 'Partnership Agreement', description: 'Formal partnership agreement' },
+    { typeName: 'MoU', description: 'Memorandum of Understanding' },
+    { typeName: 'Joint Project', description: 'Collaborative project engagement' },
+    { typeName: 'Technical Assistance', description: 'Technical support and assistance' },
+    { typeName: 'Capacity Building', description: 'Training and capacity development' },
+    { typeName: 'Research Collaboration', description: 'Joint research initiative' },
+  ];
+
+  for (const engType of engagementTypes) {
+    await prisma.engagementType.upsert({
+      where: { typeName: engType.typeName },
+      update: { description: engType.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName: engType.typeName,
+        description: engType.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Engagement types created successfully');
+
+  // Create opportunity categories
+  console.log('📁 Creating opportunity categories...');
+  const opportunityCategories = [
+    { name: 'Technology', description: 'Technology-related partnership opportunities' },
+    { name: 'Research & Development', description: 'R&D collaboration opportunities' },
+    { name: 'Capacity Building', description: 'Training and skills development opportunities' },
+    { name: 'Infrastructure', description: 'Infrastructure development opportunities' },
+    { name: 'Funding & Grants', description: 'Funding and grant opportunities' },
+  ];
+
+  for (const category of opportunityCategories) {
+    await prisma.opportunityCategory.upsert({
+      where: { name: category.name },
+      update: { description: category.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        name: category.name,
+        description: category.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Opportunity categories created successfully');
+
+  // Create strategic importance levels
+  console.log('⭐ Creating strategic importance levels...');
+  const importanceLevels = [
+    { levelName: 'Critical', description: 'High priority, strategic importance' },
+    { levelName: 'High', description: 'Important for organizational goals' },
+    { levelName: 'Medium', description: 'Moderate strategic value' },
+    { levelName: 'Low', description: 'Low strategic priority' },
+  ];
+
+  for (const level of importanceLevels) {
+    await prisma.strategicImportanceLevel.upsert({
+      where: { levelName: level.levelName },
+      update: { description: level.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        levelName: level.levelName,
+        description: level.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Strategic importance levels created successfully');
+
+  // Create opportunity sources
+  console.log('📡 Creating opportunity sources...');
+  const opportunitySources = [
+    { sourceName: 'Partner Proposal', description: 'Opportunity proposed by partner organization' },
+    { sourceName: 'Internal Identification', description: 'Identified internally by team' },
+    { sourceName: 'Government Initiative', description: 'From government programs or initiatives' },
+    { sourceName: 'International Organization', description: 'From UN, AU, or other international bodies' },
+    { sourceName: 'Donor Agency', description: 'From bilateral or multilateral donors' },
+    { sourceName: 'Market Research', description: 'Identified through market research' },
+  ];
+
+  for (const source of opportunitySources) {
+    await prisma.opportunitySource.upsert({
+      where: { sourceName: source.sourceName },
+      update: { description: source.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        sourceName: source.sourceName,
+        description: source.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Opportunity sources created successfully');
+
   // Create admin user with explicit UUID
   console.log('👤 Creating admin user...');
   const adminUserId = randomUUID();
@@ -756,6 +887,11 @@ async function main() {
   console.log('✅ 3 event modes created (Physical, Virtual, Hybrid)');
   console.log('✅ 5 visit types created (Official Visit, Working Visit, Fact-Finding Visit, Monitoring Visit, Inspection Visit)');
   console.log('✅ 5 visit categories created (Domestic, International, Field, Office, Virtual)');
+  console.log('✅ 5 communication types created (Email, Letter, Memo, Meeting Minutes, Phone Call)');
+  console.log('✅ 6 engagement types created (Partnership Agreement, MoU, Joint Project, Technical Assistance, Capacity Building, Research Collaboration)');
+  console.log('✅ 5 opportunity categories created (Technology, Research & Development, Capacity Building, Infrastructure, Funding & Grants)');
+  console.log('✅ 4 strategic importance levels created (Critical, High, Medium, Low)');
+  console.log('✅ 6 opportunity sources created (Partner Proposal, Internal Identification, Government Initiative, International Organization, Donor Agency, Market Research)');
   console.log('✅ 5 users created:');
   console.log('   - admin@example.com / Admin@123 (Admin, Headquarters)');
   console.log('   - manager@example.com / Manager@123 (Manager, Headquarters)');

@@ -19,6 +19,9 @@ import { DivisionsModule } from './modules/divisions/divisions.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { EventsModule } from './modules/events/events.module';
 import { VisitsModule } from './modules/visits/visits.module';
+import { OpportunitiesModule } from './modules/opportunities/opportunities.module';
+import { CommunicationsModule } from './modules/communications/communications.module';
+import { EngagementsModule } from './modules/engagements/engagements.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -54,6 +57,9 @@ import appConfig from './config/app.config';
     PermissionsModule,
     EventsModule,
     VisitsModule,
+    OpportunitiesModule,
+    CommunicationsModule,
+    EngagementsModule,
   ],
   providers: [
     {
