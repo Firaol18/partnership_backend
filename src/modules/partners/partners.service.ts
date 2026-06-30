@@ -481,7 +481,6 @@ export class PartnersService {
       },
     };
   }
-
   private mapToResponseDto(partner: any): PartnerResponseDto {
     return {
       id: partner.id,
@@ -493,7 +492,7 @@ export class PartnersService {
       engagementId: partner.engagementId,
       partnerName: partner.partnerName,
       acronym: partner.acronym,
-      organizationType: partner.organizationType,
+      organizationType: partner.organizationType ?? undefined,
       country: partner.country,
       regionState: partner.regionState,
       city: partner.city,
@@ -508,24 +507,30 @@ export class PartnersService {
       strategicFocusAreas: partner.strategicFocusAreas,
       keyExpertiseAreas: partner.keyExpertiseAreas,
       aiFocusAreas: partner.aiFocusAreas,
-      annualBudget: partner.annualBudget?.toString(),
+      annualBudget: partner.annualBudget != null ? String(partner.annualBudget) : undefined,
       numberOfEmployees: partner.numberOfEmployees,
       geographicCoverage: partner.geographicCoverage,
-      partnerClassification: partner.partnerClassification,
+      partnerClassification: partner.partnerClassification ?? undefined,
       status: partner.status,
       verifiedStatus: partner.verifiedStatus,
       createdBy: partner.createdBy,
-      reviewer: partner.reviewer,
+      reviewer: partner.reviewer ?? undefined,
       reviewNotes: partner.reviewNotes,
       reviewDate: partner.reviewDate,
-      verifier: partner.verifier,
+      verifier: partner.verifier ?? undefined,
       verificationNotes: partner.verificationNotes,
       verificationDate: partner.verificationDate,
-      agreement: partner.agreement,
-      opportunity: partner.opportunity,
-      engagement: partner.engagement,
-      contacts: partner.contacts,
-      focalPersons: partner.focalPersons,
+      agreement: partner.agreement
+        ? { id: partner.agreement.id, agreementId: partner.agreement.agreementId, agreementTitle: partner.agreement.agreementTitle }
+        : undefined,
+      opportunity: partner.opportunity
+        ? { id: partner.opportunity.id, title: partner.opportunity.title }
+        : undefined,
+      engagement: partner.engagement
+        ? { id: partner.engagement.id, recordId: partner.engagement.recordId }
+        : undefined,
+      contacts: partner.contacts ?? [],
+      focalPersons: partner.focalPersons ?? [],
       createdAt: partner.createdAt,
       updatedAt: partner.updatedAt,
     };
