@@ -24,6 +24,8 @@ import { CommunicationsModule } from './modules/communications/communications.mo
 import { EngagementsModule } from './modules/engagements/engagements.module';
 import { AgreementsModule } from './modules/agreements/agreements.module';
 import { PartnersModule } from './modules/partners/partners.module';
+import { DocumentsModule } from './modules/documents/documents.module';
+import { CollaborationsModule } from './modules/collaborations/collaborations.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -64,6 +66,8 @@ import appConfig from './config/app.config';
     EngagementsModule,
     AgreementsModule,
     PartnersModule,
+    DocumentsModule,
+    CollaborationsModule,
   ],
   providers: [
     {
