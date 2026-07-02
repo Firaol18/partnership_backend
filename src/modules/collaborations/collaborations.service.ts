@@ -8,6 +8,10 @@ import { CreateCollaborationDto } from './dto/create-collaboration.dto';
 import { UpdateCollaborationDto } from './dto/update-collaboration.dto';
 import { QueryCollaborationsDto } from './dto/query-collaborations.dto';
 import { CollaborationResponseDto } from './dto/collaboration-response.dto';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { CreateJointActivityDto } from './dto/create-joint-activity.dto';
+import { CreateFundingGrantDto } from './dto/create-funding-grant.dto';
+import { CreateResourceContributionDto } from './dto/create-resource-contribution.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -30,13 +34,11 @@ export class CollaborationsService {
     } = createCollaborationDto;
 
     // Validate partner exists
-    // Note: Partner model not yet implemented in schema, skipping validation for now
-    // await this.validatePartner(partnerId);
+    await this.validatePartner(partnerId);
 
     // Validate agreement if provided
     if (agreementId) {
-      // Note: Agreement model not yet implemented in schema, skipping validation for now
-      // await this.validateAgreement(agreementId);
+      await this.validateAgreement(agreementId);
     }
 
     // Generate collaboration ID: COL-YYYY-XXXX
@@ -92,7 +94,7 @@ export class CollaborationsService {
     const take = limit;
 
     // Build where clause
-    const where: Prisma.CollaborationWhereInput = {
+    const where: any = {
       deletedAt: null,
     };
 
@@ -225,17 +227,15 @@ export class CollaborationsService {
 
     // Validate partner if provided
     if (partnerId) {
-      // Note: Partner model not yet implemented in schema, skipping validation for now
-      // await this.validatePartner(partnerId);
+      await this.validatePartner(partnerId);
     }
 
     // Validate agreement if provided
     if (agreementId) {
-      // Note: Agreement model not yet implemented in schema, skipping validation for now
-      // await this.validateAgreement(agreementId);
+      await this.validateAgreement(agreementId);
     }
 
-    const updateData: Prisma.CollaborationUpdateInput = {
+    const updateData: any = {
       title,
       description,
       collaborationType,
@@ -407,12 +407,197 @@ export class CollaborationsService {
       where: { id },
       data: {
         status: 'Cancelled',
+        rejectionReason: reason,
         updatedAt: new Date(),
       },
       include: this.getIncludeObject(),
     });
 
     return this.mapToResponseDto(updated);
+  }
+
+  // Project methods
+  async createProject(
+    collaborationId: string,
+    createProjectDto: CreateProjectDto,
+    userId: string,
+  ): Promise<any> {
+    const collaboration = await this.prisma.collaboration.findUnique({
+      where: { id: collaborationId },
+    });
+
+    if (!collaboration) {
+      throw new NotFoundException('Collaboration not found');
+    }
+
+    const projectId = `PRJ-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const project = await this.prisma.project.create({
+      data: {
+        projectUid: crypto.randomUUID(),
+        projectId,
+        collaborationId,
+        projectName: createProjectDto.projectName,
+        description: createProjectDto.description,
+        thematicArea: createProjectDto.thematicArea,
+        budget: createProjectDto.budget,
+        fundingSource: createProjectDto.fundingSource,
+        currency: createProjectDto.currency,
+        projectManager: createProjectDto.projectManager,
+        partnerLead: createProjectDto.partnerLead,
+        teamMembers: createProjectDto.teamMembers,
+        startDate: createProjectDto.startDate ? new Date(createProjectDto.startDate) : null,
+        endDate: createProjectDto.endDate ? new Date(createProjectDto.endDate) : null,
+        percentageCompletion: createProjectDto.percentageComplete || 0,
+        status: createProjectDto.status || 'Planned',
+        partnerId: createProjectDto.partnerId || '',
+        createdBy: userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
+    return project;
+  }
+
+  // Joint Activity methods
+  async createJointActivity(
+    collaborationId: string,
+    createJointActivityDto: CreateJointActivityDto,
+    userId: string,
+  ): Promise<any> {
+    const collaboration = await this.prisma.collaboration.findUnique({
+      where: { id: collaborationId },
+    });
+
+    if (!collaboration) {
+      throw new NotFoundException('Collaboration not found');
+    }
+
+    const activityId = `ACT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const activity = await this.prisma.jointActivity.create({
+      data: {
+        activityUid: crypto.randomUUID(),
+        activityId,
+        collaborationId,
+        activityName: createJointActivityDto.activityName,
+        activityType: createJointActivityDto.activityType,
+        description: createJointActivityDto.description,
+        startDate: createJointActivityDto.startDate ? new Date(createJointActivityDto.startDate) : null,
+        endDate: createJointActivityDto.endDate ? new Date(createJointActivityDto.endDate) : null,
+        leadOrganizationId: createJointActivityDto.leadOrganization || '',
+        eaiiResponsibleUnit: createJointActivityDto.eaiiResponsibleUnit,
+        partnerResponsibleUnit: createJointActivityDto.partnerResponsibleUnit,
+        plannedOutputs: createJointActivityDto.plannedOutputs,
+        actualOutputs: createJointActivityDto.actualOutputs,
+        partnerId: createJointActivityDto.partnerId || '',
+        status: 'Planned',
+        createdBy: userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
+    return activity;
+  }
+
+  // Funding Grant methods
+  async createFundingGrant(
+    collaborationId: string,
+    createFundingGrantDto: CreateFundingGrantDto,
+    userId: string,
+  ): Promise<any> {
+    const collaboration = await this.prisma.collaboration.findUnique({
+      where: { id: collaborationId },
+    });
+
+    if (!collaboration) {
+      throw new NotFoundException('Collaboration not found');
+    }
+
+    const grant = await this.prisma.fundingGrant.create({
+      data: {
+        grantUid: crypto.randomUUID(),
+        grantId: createFundingGrantDto.grantId,
+        collaborationId,
+        partnerId: createFundingGrantDto.partnerId || '',
+        donorName: createFundingGrantDto.donorName,
+        amount: createFundingGrantDto.amount,
+        currency: createFundingGrantDto.currency,
+        submissionDate: createFundingGrantDto.submissionDate ? new Date(createFundingGrantDto.submissionDate) : null,
+        approvalDate: createFundingGrantDto.approvalDate ? new Date(createFundingGrantDto.approvalDate) : null,
+        endDate: createFundingGrantDto.endDate ? new Date(createFundingGrantDto.endDate) : null,
+        status: createFundingGrantDto.status || 'Pending',
+        createdBy: userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
+    return grant;
+  }
+
+  // Resource Contribution methods
+  async createResourceContribution(
+    collaborationId: string,
+    createResourceContributionDto: CreateResourceContributionDto,
+    userId: string,
+  ): Promise<any> {
+    const collaboration = await this.prisma.collaboration.findUnique({
+      where: { id: collaborationId },
+    });
+
+    if (!collaboration) {
+      throw new NotFoundException('Collaboration not found');
+    }
+
+    const contribution = await this.prisma.resourceContribution.create({
+      data: {
+        resourceUid: crypto.randomUUID(),
+        resourceId: createResourceContributionDto.resourceId,
+        collaborationId,
+        partnerId: createResourceContributionDto.partnerId || '',
+        projectId: createResourceContributionDto.projectId || '',
+        eaiiStaff: createResourceContributionDto.eaiiStaff,
+        eaiiInfrastructure: createResourceContributionDto.eaiiInfrastructure,
+        eaiiFunding: createResourceContributionDto.eaiiFunding,
+        eaiiEquipment: createResourceContributionDto.eaiiEquipment,
+        eaiiDataResources: createResourceContributionDto.eaiiDataResources,
+        partnerStaff: createResourceContributionDto.partnerStaff,
+        partnerFunding: createResourceContributionDto.partnerFunding,
+        partnerTechnology: createResourceContributionDto.partnerTechnology,
+        partnerEquipment: createResourceContributionDto.partnerEquipment,
+        partnerExpertise: createResourceContributionDto.partnerExpertise,
+        estimatedMonetaryValue: createResourceContributionDto.estimatedMonetaryValue,
+        estimatedInKindValue: createResourceContributionDto.estimatedInKindValue,
+        currency: createResourceContributionDto.currency,
+        status: createResourceContributionDto.status || 'Active',
+        createdBy: userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
+    return contribution;
+  }
+
+  private async validatePartner(partnerId: string): Promise<void> {
+    const partner = await this.prisma.partner.findUnique({
+      where: { id: partnerId },
+    });
+    if (!partner) {
+      throw new BadRequestException('Partner not found');
+    }
+  }
+
+  private async validateAgreement(agreementId: string): Promise<void> {
+    const agreement = await this.prisma.agreement.findUnique({
+      where: { id: agreementId },
+    });
+    if (!agreement) {
+      throw new BadRequestException('Agreement not found');
+    }
   }
 
   private getIncludeObject() {
@@ -423,6 +608,22 @@ export class CollaborationsService {
           fullName: true,
           email: true,
           position: true,
+        },
+      },
+      partner: {
+        select: {
+          id: true,
+          partnerName: true,
+          acronym: true,
+          country: true,
+        },
+      },
+      agreement: {
+        select: {
+          id: true,
+          agreementId: true,
+          agreementTitle: true,
+          status: true,
         },
       },
       jointActivities: true,
@@ -447,6 +648,7 @@ export class CollaborationsService {
         ? collaboration.endDate.toISOString().split('T')[0]
         : null,
       status: collaboration.status,
+      rejectionReason: collaboration.rejectionReason,
       partnerId: collaboration.partnerId,
       agreementId: collaboration.agreementId,
       createdAt: collaboration.createdAt,

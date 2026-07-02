@@ -28,6 +28,9 @@ export class CollaborationResponseDto {
   @ApiProperty()
   status: string;
 
+  @ApiProperty({ required: false })
+  rejectionReason?: string;
+
   @ApiProperty()
   partnerId: string;
 

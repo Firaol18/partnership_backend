@@ -167,6 +167,11 @@ model User {
   // Collaboration relations
   createdCollaborations Collaboration[] @relation("CollaborationCreator")
 
+  // Partner and Agreement relations
+  createdPartners Partner[] @relation("PartnerCreator")
+  createdAgreements Agreement[] @relation("AgreementCreator")
+  focalPersonAssignments InternalFocalPerson[] @relation("FocalPersonUser")
+
   @@index([email], map: "idx_users_email")
   @@index([status], map: "idx_users_status")
   @@index([divisionId], map: "idx_users_division")
@@ -899,6 +904,343 @@ model EngagementEaiiRepresentative {
   @@map("engagement_eaii_representatives")
 }
 
+// 4. AGREEMENT MANAGEMENT SUBSYSTEM
+// =======================================================================
+
+model AgreementType {
+  id          String @id @default(uuid()) @db.Uuid
+  typeName    String @unique @map("type_name") @db.VarChar(50)
+  description String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  agreements Agreement[]
+
+  @@index([typeName], map: "idx_agreement_types_name")
+  @@map("agreement_types")
+}
+
+model Agreement {
+  id           String @id @default(uuid()) @db.Uuid
+  agreementUid String @unique @default(uuid()) @map("agreement_uid") @db.Uuid
+  agreementId  String @unique @map("agreement_id") @db.VarChar(50)
+
+  opportunityId String? @map("opportunity_id") @db.Uuid
+  engagementId  String? @map("engagement_id") @db.Uuid
+  partnerId     String? @map("partner_id") @db.Uuid
+
+  agreementTitle   String  @map("agreement_title") @db.VarChar(255)
+  agreementTypeId  String  @map("agreement_type_id") @db.Uuid
+  agreementType    AgreementType @relation(fields: [agreementTypeId], references: [id])
+
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  renewalDate DateTime? @map("renewal_date") @db.Date
+
+  legalReviewStatus String @default("Pending") @map("legal_review_status") @db.VarChar(50)
+  approvalStatus   String @default("Draft") @map("approval_status") @db.VarChar(50)
+
+  signatories String @db.Text
+  signingDate DateTime? @map("signing_date") @db.Date
+
+  partnerName              String  @map("partner_name") @db.VarChar(255)
+  eaiiResponsibleDivision  String  @map("eaii_responsible_division") @db.VarChar(255)
+  eaiiResponsibleDirectorate String? @map("eaii_responsible_directorate") @db.VarChar(255)
+
+  draftVersions String? @map("draft_versions") @db.Text
+  signedVersionPath String? @map("signed_version_path") @db.Text
+  amendments String? @map("amendments") @db.Text
+
+  version Int @default(1)
+  previousVersionId String? @map("previous_version_id") @db.Uuid
+
+  status String @default("DRAFT") @db.VarChar(50)
+
+  createdBy String @map("created_by") @db.Uuid
+  creator   User   @relation("AgreementCreator", fields: [createdBy], references: [id])
+
+  reviewedBy String? @map("reviewed_by") @db.Uuid
+  reviewNotes String? @map("review_notes") @db.Text
+  reviewDate DateTime? @map("review_date")
+
+  verifiedBy String? @map("verified_by") @db.Uuid
+  verificationNotes String? @map("verification_notes") @db.Text
+  verificationDate DateTime? @map("verification_date")
+  verifiedStatus String @default("pending") @map("verified_status") @db.VarChar(20)
+
+  approvedBy String? @map("approved_by") @db.Uuid
+  approvalNotes String? @map("approval_notes") @db.Text
+  approvalDate DateTime? @map("approval_date")
+  approvedStatus String @default("pending") @map("approved_status") @db.VarChar(20)
+
+  legalReviewedBy String? @map("legal_reviewed_by") @db.Uuid
+  legalReviewNotes String? @map("legal_review_notes") @db.Text
+  legalReviewDate DateTime? @map("legal_review_date")
+  legalApproved Boolean @default(false) @map("legal_approved")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  documents AgreementDocument[]
+  amendmentsList AgreementAmendment[]
+  reviewHistory AgreementReviewHistory[]
+  collaborations Collaboration[]
+  partners Partner[]
+
+  @@index([agreementId], map: "idx_agreements_agreement_id")
+  @@index([opportunityId], map: "idx_agreements_opportunity")
+  @@index([engagementId], map: "idx_agreements_engagement")
+  @@index([partnerId], map: "idx_agreements_partner")
+  @@index([agreementTypeId], map: "idx_agreements_type")
+  @@index([status], map: "idx_agreements_status")
+  @@index([startDate], map: "idx_agreements_start_date")
+  @@index([endDate], map: "idx_agreements_end_date")
+  @@index([signingDate], map: "idx_agreements_signing_date")
+  @@map("agreements")
+}
+
+model AgreementDocument {
+  id             String @id @default(uuid()) @db.Uuid
+  agreementId    String @map("agreement_id") @db.Uuid
+  agreement      Agreement @relation(fields: [agreementId], references: [id])
+  documentId     String @map("document_id") @db.Uuid
+  documentCategory String @map("document_category") @db.VarChar(50)
+  isCurrentVersion Boolean @default(true) @map("is_current_version")
+  versionNumber String? @map("version_number") @db.VarChar(20)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([agreementId], map: "idx_agr_doc_agreement")
+  @@index([documentId], map: "idx_agr_doc_document")
+  @@index([documentCategory], map: "idx_agr_doc_category")
+  @@index([isCurrentVersion], map: "idx_agr_doc_current")
+  @@map("agreement_documents")
+}
+
+model AgreementAmendment {
+  id             String @id @default(uuid()) @db.Uuid
+  amendmentUid   String @unique @default(uuid()) @map("amendment_uid") @db.Uuid
+  agreementId    String @map("agreement_id") @db.Uuid
+  agreement      Agreement @relation(fields: [agreementId], references: [id])
+
+  amendmentTitle       String  @map("amendment_title") @db.VarChar(255)
+  amendmentDescription String? @map("amendment_description") @db.Text
+  amendmentDate        DateTime @map("amendment_date") @db.Date
+  effectiveDate       DateTime @map("effective_date") @db.Date
+
+  changedClauses String? @map("changed_clauses") @db.Text
+  reasonForAmendment String? @map("reason_for_amendment") @db.Text
+
+  documentId String? @map("document_id") @db.Uuid
+
+  approvedBy String? @map("approved_by") @db.Uuid
+  approvedDate DateTime? @map("approved_date") @db.Date
+  approvalStatus String @default("Pending") @map("approval_status") @db.VarChar(50)
+
+  createdBy String @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([agreementId], map: "idx_agr_amendments_agreement")
+  @@index([amendmentDate], map: "idx_agr_amendments_date")
+  @@index([documentId], map: "idx_agr_amendments_document")
+  @@index([approvalStatus], map: "idx_agr_amendments_status")
+  @@map("agreement_amendments")
+}
+
+model AgreementReviewHistory {
+  id          String @id @default(uuid()) @db.Uuid
+  agreementId String @map("agreement_id") @db.Uuid
+  agreement   Agreement @relation(fields: [agreementId], references: [id])
+
+  reviewerId   String @map("reviewer_id") @db.Uuid
+  reviewType   String @map("review_type") @db.VarChar(50)
+  reviewNotes String? @map("review_notes") @db.Text
+  reviewStatus String @map("review_status") @db.VarChar(20)
+  reviewDate  DateTime @map("review_date")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([agreementId], map: "idx_agr_review_agreement")
+  @@index([reviewerId], map: "idx_agr_review_reviewer")
+  @@index([reviewType], map: "idx_agr_review_type")
+  @@index([reviewDate], map: "idx_agr_review_date")
+  @@map("agreement_review_history")
+}
+
+// 5. PARTNER REGISTRATION SUBSYSTEM
+// =======================================================================
+
+model OrganizationType {
+  id          String @id @default(uuid()) @db.Uuid
+  typeName    String @unique @map("type_name") @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  partners Partner[]
+
+  @@index([typeName], map: "idx_org_types_name")
+  @@map("organization_types")
+}
+
+model PartnerClassification {
+  id                  String @id @default(uuid()) @db.Uuid
+  classificationName  String @unique @map("classification_name") @db.VarChar(100)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
+
+  partners Partner[]
+
+  @@map("partner_classifications")
+}
+
+model PartnerStatus {
+  id         String @id @default(uuid()) @db.Uuid
+  statusName String @unique @map("status_name") @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  partners Partner[]
+
+  @@map("partner_statuses")
+}
+
+enum RegistrationPath {
+  FORMAL
+  DIRECT
+}
+
+model Partner {
+  id         String @id @default(uuid()) @db.Uuid
+  partnerUid String @unique @default(uuid()) @map("partner_uid") @db.Uuid
+
+  registrationPath RegistrationPath @map("registration_path")
+
+  agreementId    String? @map("agreement_id") @db.Uuid
+  agreement      Agreement? @relation(fields: [agreementId], references: [id])
+  opportunityId  String? @map("opportunity_id") @db.Uuid
+  engagementId   String? @map("engagement_id") @db.Uuid
+
+  partnerName          String  @map("partner_name") @db.VarChar(255)
+  acronym              String? @db.VarChar(50)
+  organizationTypeId    String? @map("organization_type_id") @db.Uuid
+  organizationType      OrganizationType? @relation(fields: [organizationTypeId], references: [id])
+  country              String  @db.VarChar(100)
+  regionState          String? @map("region_state") @db.VarChar(100)
+  city                 String? @db.VarChar(100)
+  address              String? @db.Text
+  website              String? @db.VarChar(255)
+  yearEstablished      Int?    @map("year_established")
+  registrationLicenseNumber String? @map("registration_license_number") @db.VarChar(100)
+  taxNumber            String? @map("tax_number") @db.VarChar(50)
+  logoUrl              String? @map("logo_url") @db.Text
+
+  mission              String? @db.Text
+  vision               String? @db.Text
+  strategicFocusAreas  String? @map("strategic_focus_areas") @db.Text
+  keyExpertiseAreas    String? @map("key_expertise_areas") @db.Text
+  aiFocusAreas         String? @map("ai_focus_areas") @db.Text
+  annualBudget         Decimal? @map("annual_budget") @db.Decimal(15, 2)
+  numberOfEmployees    Int?    @map("number_of_employees")
+  geographicCoverage   String? @map("geographic_coverage") @db.Text
+  partnerClassificationId String? @map("partner_classification_id") @db.Uuid
+  partnerClassification PartnerClassification? @relation(fields: [partnerClassificationId], references: [id])
+
+  statusId String @map("status_id") @db.Uuid
+  status   PartnerStatus @relation(fields: [statusId], references: [id])
+
+  createdBy String @map("created_by") @db.Uuid
+  creator   User   @relation("PartnerCreator", fields: [createdBy], references: [id])
+
+  reviewedBy String? @map("reviewed_by") @db.Uuid
+  reviewNotes String? @map("review_notes") @db.Text
+  reviewDate DateTime? @map("review_date")
+
+  verifiedBy String? @map("verified_by") @db.Uuid
+  verificationNotes String? @map("verification_notes") @db.Text
+  verificationDate DateTime? @map("verification_date")
+  verifiedStatus String @default("pending") @map("verified_status") @db.VarChar(20)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  contacts PartnerContact[]
+  internalFocalPersons InternalFocalPerson[]
+  collaborations Collaboration[]
+  jointActivities JointActivity[]
+  projects Project[]
+  resourceContributions ResourceContribution[]
+  fundingGrants FundingGrant[]
+
+  @@index([partnerName], map: "idx_partners_name")
+  @@index([country], map: "idx_partners_country")
+  @@index([statusId], map: "idx_partners_status")
+  @@index([organizationTypeId], map: "idx_partners_org_type")
+  @@index([agreementId], map: "idx_partners_agreement")
+  @@index([opportunityId], map: "idx_partners_opportunity")
+  @@index([engagementId], map: "idx_partners_engagement")
+  @@index([registrationPath], map: "idx_partners_registration_path")
+  @@map("partners")
+}
+
+model PartnerContact {
+  id         String @id @default(uuid()) @db.Uuid
+  contactUid String @unique @default(uuid()) @map("contact_uid") @db.Uuid
+  partnerId  String @map("partner_id") @db.Uuid
+  partner    Partner @relation(fields: [partnerId], references: [id])
+
+  fullName        String  @map("full_name") @db.VarChar(255)
+  positionTitle   String? @map("position_title") @db.VarChar(255)
+  department      String? @db.VarChar(255)
+  email           String  @db.VarChar(255)
+  mobilePhone     String? @map("mobile_phone") @db.VarChar(50)
+  officePhone     String? @map("office_phone") @db.VarChar(50)
+  isPrimary       Boolean @default(false) @map("is_primary")
+  roleInPartnership String? @map("role_in_partnership") @db.Text
+
+  createdBy String? @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([partnerId], map: "idx_contacts_partner")
+  @@index([email], map: "idx_contacts_email")
+  @@index([isPrimary], map: "idx_contacts_primary")
+  @@map("partner_contacts")
+}
+
+model InternalFocalPerson {
+  id        String @id @default(uuid()) @db.Uuid
+  partnerId String @map("partner_id") @db.Uuid
+  partner   Partner @relation(fields: [partnerId], references: [id])
+  userId    String @map("user_id") @db.Uuid
+  user      User?   @relation("FocalPersonUser", fields: [userId], references: [id])
+
+  isPrimary Boolean @default(false) @map("is_primary")
+  position  String? @db.VarChar(100)
+  division  String? @db.VarChar(100)
+  directorate String? @db.VarChar(100)
+  email     String? @db.VarChar(255)
+  phone     String? @db.VarChar(50)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([partnerId], map: "idx_focal_partner")
+  @@map("internal_focal_persons")
+}
+
 // 9. COLLABORATION MANAGEMENT SUBSYSTEM
 // =======================================================================
 
@@ -908,10 +1250,10 @@ model Collaboration {
   collaborationId   String @unique @map("collaboration_id") @db.VarChar(50)
 
   partnerId String @map("partner_id") @db.Uuid
-  // partner   Partner? @relation(fields: [partnerId], references: [id])
+  partner   Partner? @relation(fields: [partnerId], references: [id])
 
   agreementId String? @map("agreement_id") @db.Uuid
-  // agreement  Agreement? @relation(fields: [agreementId], references: [id])
+  agreement  Agreement? @relation(fields: [agreementId], references: [id])
 
   title             String @db.VarChar(255)
   description       String? @db.Text
@@ -921,6 +1263,7 @@ model Collaboration {
   endDate   DateTime? @map("end_date") @db.Date
 
   status String @default("Planned") @db.VarChar(50)
+  rejectionReason String? @map("rejection_reason") @db.Text
 
   createdBy String @map("created_by") @db.Uuid
   creator   User   @relation("CollaborationCreator", fields: [createdBy], references: [id])
@@ -954,7 +1297,7 @@ model JointActivity {
   collaboration   Collaboration @relation(fields: [collaborationId], references: [id])
 
   partnerId String @map("partner_id") @db.Uuid
-  // partner   Partner? @relation(fields: [partnerId], references: [id])
+  partner   Partner? @relation(fields: [partnerId], references: [id])
 
   activityName String @map("activity_name") @db.VarChar(255)
   activityType String @map("activity_type") @db.VarChar(100)
@@ -1040,7 +1383,7 @@ model Project {
   collaboration   Collaboration @relation(fields: [collaborationId], references: [id])
 
   partnerId String @map("partner_id") @db.Uuid
-  // partner   Partner? @relation(fields: [partnerId], references: [id])
+  partner   Partner? @relation(fields: [partnerId], references: [id])
 
   projectName   String @map("project_name") @db.VarChar(255)
   description   String? @db.Text
@@ -1176,7 +1519,7 @@ model ResourceContribution {
   collaboration   Collaboration @relation(fields: [collaborationId], references: [id])
 
   partnerId String @map("partner_id") @db.Uuid
-  // partner   Partner? @relation(fields: [partnerId], references: [id])
+  partner   Partner? @relation(fields: [partnerId], references: [id])
 
   projectId String? @map("project_id") @db.Uuid
   // project   Project? @relation(fields: [projectId], references: [id])
@@ -1223,7 +1566,7 @@ model FundingGrant {
   collaboration   Collaboration @relation(fields: [collaborationId], references: [id])
 
   partnerId String @map("partner_id") @db.Uuid
-  // partner   Partner? @relation(fields: [partnerId], references: [id])
+  partner   Partner? @relation(fields: [partnerId], references: [id])
 
   projectId String? @map("project_id") @db.Uuid
   // project   Project? @relation(fields: [projectId], references: [id])

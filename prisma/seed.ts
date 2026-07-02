@@ -124,6 +124,18 @@ async function main() {
     { resource: 'visits', action: 'delete-outcome' },
     { resource: 'visits', action: 'verify' },
     { resource: 'visits', action: 'review' },
+
+    // Collaboration permissions
+    { resource: 'collaborations', action: 'read' },
+    { resource: 'collaborations', action: 'create' },
+    { resource: 'collaborations', action: 'update' },
+    { resource: 'collaborations', action: 'delete' },
+    { resource: 'collaborations', action: 'manage' },
+    { resource: 'collaborations', action: 'approve' },
+    { resource: 'collaborations', action: 'complete' },
+    { resource: 'collaborations', action: 'delay' },
+    { resource: 'collaborations', action: 'cancel' },
+    { resource: 'collaborations', action: 'restore' },
   ];
 
   console.log('📝 Creating permissions...');
@@ -616,6 +628,103 @@ async function main() {
 
   console.log('✅ Opportunity sources created successfully');
 
+  // Create organization types
+  console.log('🏢 Creating organization types...');
+  const organizationTypes = [
+    { typeName: 'Government' },
+    { typeName: 'University' },
+    { typeName: 'Private Company' },
+    { typeName: 'Startup' },
+    { typeName: 'NGO' },
+  ];
+
+  for (const orgType of organizationTypes) {
+    await prisma.organizationType.upsert({
+      where: { typeName: orgType.typeName },
+      update: { updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName: orgType.typeName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Organization types created successfully');
+
+  // Create partner classifications
+  console.log('🏷️ Creating partner classifications...');
+  const partnerClassifications = [
+    { classificationName: 'Strategic Partner' },
+    { classificationName: 'Technical Partner' },
+    { classificationName: 'Academic Partner' },
+    { classificationName: 'Funding Partner' },
+  ];
+
+  for (const classification of partnerClassifications) {
+    await prisma.partnerClassification.upsert({
+      where: { classificationName: classification.classificationName },
+      update: { updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        classificationName: classification.classificationName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Partner classifications created successfully');
+
+  // Create partner statuses
+  console.log('📊 Creating partner statuses...');
+  const partnerStatuses = [
+    { statusName: 'Active' },
+    { statusName: 'Prospect' },
+    { statusName: 'Dormant' },
+  ];
+
+  for (const status of partnerStatuses) {
+    await prisma.partnerStatus.upsert({
+      where: { statusName: status.statusName },
+      update: { updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        statusName: status.statusName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Partner statuses created successfully');
+
+  // Create agreement types
+  console.log('📝 Creating agreement types...');
+  const agreementTypes = [
+    { typeName: 'MoU', description: 'Memorandum of Understanding' },
+    { typeName: 'MoA', description: 'Memorandum of Agreement' },
+    { typeName: 'Contract', description: 'Formal contract agreement' },
+    { typeName: 'Grant Agreement', description: 'Grant funding agreement' },
+  ];
+
+  for (const agreementType of agreementTypes) {
+    await prisma.agreementType.upsert({
+      where: { typeName: agreementType.typeName },
+      update: { description: agreementType.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName: agreementType.typeName,
+        description: agreementType.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Agreement types created successfully');
+
   // Create admin user with explicit UUID
   console.log('👤 Creating admin user...');
   const adminUserId = randomUUID();
@@ -655,6 +764,84 @@ async function main() {
   });
 
   console.log('✅ Admin user created successfully');
+
+  // Create test partner
+  console.log('🤝 Creating test partner...');
+  const organizationType = await prisma.organizationType.findFirst({
+    where: { typeName: 'University' },
+  });
+  const partnerClassification = await prisma.partnerClassification.findFirst({
+    where: { classificationName: 'Strategic Partner' },
+  });
+  const partnerStatus = await prisma.partnerStatus.findFirst({
+    where: { statusName: 'Active' },
+  });
+
+  let testPartner = await prisma.partner.findFirst({
+    where: { partnerName: 'Test University' },
+  });
+
+  if (!testPartner) {
+    testPartner = await prisma.partner.create({
+      data: {
+        id: randomUUID(),
+        partnerUid: randomUUID(),
+        registrationPath: 'DIRECT',
+        partnerName: 'Test University',
+        acronym: 'TU',
+        organizationTypeId: organizationType?.id || '',
+        country: 'Ethiopia',
+        city: 'Addis Ababa',
+        website: 'https://testuniversity.edu',
+        yearEstablished: 2000,
+        mission: 'To provide quality education and research',
+        vision: 'To be a leading university in Africa',
+        partnerClassificationId: partnerClassification?.id || '',
+        statusId: partnerStatus?.id || '',
+        createdBy: adminUser.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Test partner created successfully');
+
+  // Create test agreement
+  console.log('📄 Creating test agreement...');
+  const agreementType = await prisma.agreementType.findFirst({
+    where: { typeName: 'MoU' },
+  });
+
+  let testAgreement = await prisma.agreement.findFirst({
+    where: { agreementId: 'AGR-2024-0001' },
+  });
+
+  if (!testAgreement) {
+    testAgreement = await prisma.agreement.create({
+      data: {
+        id: randomUUID(),
+        agreementUid: randomUUID(),
+        agreementId: 'AGR-2024-0001',
+        partnerId: testPartner.id,
+        agreementTitle: 'Test Partnership Agreement',
+        agreementTypeId: agreementType?.id || '',
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-12-31'),
+        partnerName: 'Test University',
+        eaiiResponsibleDivision: 'Headquarters',
+        signatories: JSON.stringify([
+          { name: 'John Doe', title: 'Director', organization: 'EAII', signedDate: '2024-01-01' },
+        ]),
+        status: 'ACTIVE',
+        createdBy: adminUser.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Test agreement created successfully');
 
   // Create a manager user with explicit UUID
   console.log('👤 Creating manager user...');

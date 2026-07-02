@@ -18,12 +18,17 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { CollaborationsService } from './collaborations.service';
 import { CreateCollaborationDto } from './dto/create-collaboration.dto';
 import { UpdateCollaborationDto } from './dto/update-collaboration.dto';
 import { QueryCollaborationsDto } from './dto/query-collaborations.dto';
 import { CollaborationResponseDto } from './dto/collaboration-response.dto';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { CreateJointActivityDto } from './dto/create-joint-activity.dto';
+import { CreateFundingGrantDto } from './dto/create-funding-grant.dto';
+import { CreateResourceContributionDto } from './dto/create-resource-contribution.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -45,7 +50,7 @@ export class CollaborationsController {
     type: CollaborationResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  @Roles('focal_person', 'officer', 'division_director')
+  @Roles('admin', 'focal_person', 'officer', 'division_director')
   async create(
     @Body() createCollaborationDto: CreateCollaborationDto,
     @CurrentUser('id') userId: string,
@@ -111,7 +116,7 @@ export class CollaborationsController {
     type: CollaborationResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Collaboration not found' })
-  @Roles('focal_person', 'officer', 'division_director')
+  @Roles('admin', 'focal_person', 'officer', 'division_director')
   async update(
     @Param('id') id: string,
     @Body() updateCollaborationDto: UpdateCollaborationDto,
@@ -124,7 +129,7 @@ export class CollaborationsController {
   @ApiOperation({ summary: 'Soft delete collaboration' })
   @ApiResponse({ status: 204, description: 'Collaboration deleted successfully' })
   @ApiResponse({ status: 404, description: 'Collaboration not found' })
-  @Roles('focal_person', 'officer', 'division_director')
+  @Roles('admin', 'focal_person', 'officer', 'division_director')
   async remove(@Param('id') id: string): Promise<void> {
     await this.collaborationsService.remove(id);
   }
@@ -137,7 +142,7 @@ export class CollaborationsController {
     type: CollaborationResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Collaboration not found' })
-  @Roles('division_director')
+  @Roles('admin', 'division_director')
   async restore(@Param('id') id: string): Promise<CollaborationResponseDto> {
     return this.collaborationsService.restore(id);
   }
@@ -159,7 +164,7 @@ export class CollaborationsController {
     status: 400,
     description: 'Only planned collaborations can be approved',
   })
-  @Roles('division_director')
+  @Roles('admin', 'division_director')
   async approve(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -180,7 +185,7 @@ export class CollaborationsController {
     status: 400,
     description: 'Only ongoing collaborations can be completed',
   })
-  @Roles('focal_person', 'officer', 'division_director')
+  @Roles('admin', 'focal_person', 'officer', 'division_director')
   async complete(
     @Param('id') id: string,
   ): Promise<CollaborationResponseDto> {
@@ -199,7 +204,7 @@ export class CollaborationsController {
     status: 400,
     description: 'Only ongoing collaborations can be delayed',
   })
-  @Roles('focal_person', 'officer', 'division_director')
+  @Roles('admin', 'focal_person', 'officer', 'division_director')
   async delay(
     @Param('id') id: string,
     @Body('reason') reason?: string,
@@ -208,18 +213,88 @@ export class CollaborationsController {
   }
 
   @Patch(':id/cancel')
-  @ApiOperation({ summary: 'Cancel collaboration' })
+  @ApiOperation({ 
+    summary: 'Cancel collaboration',
+    description: 'Cancel a collaboration and optionally provide a rejection reason'
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        reason: {
+          type: 'string',
+          description: 'Reason for cancellation/rejection',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Collaboration cancelled successfully',
     type: CollaborationResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Collaboration not found' })
-  @Roles('division_director')
+  @Roles('admin', 'division_director')
   async cancel(
     @Param('id') id: string,
     @Body('reason') reason?: string,
   ): Promise<CollaborationResponseDto> {
     return this.collaborationsService.cancel(id, reason);
+  }
+
+  // Nested routes for Projects
+  @Post(':id/projects')
+  @ApiOperation({ summary: 'Create a project under a collaboration' })
+  @ApiResponse({ status: 201, description: 'Project created successfully' })
+  @ApiResponse({ status: 404, description: 'Collaboration not found' })
+  @Roles('admin', 'focal_person', 'officer', 'division_director')
+  async createProject(
+    @Param('id') id: string,
+    @Body() createProjectDto: CreateProjectDto,
+    @CurrentUser('id') userId: string,
+  ): Promise<any> {
+    return this.collaborationsService.createProject(id, createProjectDto, userId);
+  }
+
+  // Nested routes for Joint Activities
+  @Post(':id/joint-activities')
+  @ApiOperation({ summary: 'Create a joint activity under a collaboration' })
+  @ApiResponse({ status: 201, description: 'Joint activity created successfully' })
+  @ApiResponse({ status: 404, description: 'Collaboration not found' })
+  @Roles('admin', 'focal_person', 'officer', 'division_director')
+  async createJointActivity(
+    @Param('id') id: string,
+    @Body() createJointActivityDto: CreateJointActivityDto,
+    @CurrentUser('id') userId: string,
+  ): Promise<any> {
+    return this.collaborationsService.createJointActivity(id, createJointActivityDto, userId);
+  }
+
+  // Nested routes for Funding Grants
+  @Post(':id/funding-grants')
+  @ApiOperation({ summary: 'Create a funding grant under a collaboration' })
+  @ApiResponse({ status: 201, description: 'Funding grant created successfully' })
+  @ApiResponse({ status: 404, description: 'Collaboration not found' })
+  @Roles('admin', 'focal_person', 'officer', 'division_director')
+  async createFundingGrant(
+    @Param('id') id: string,
+    @Body() createFundingGrantDto: CreateFundingGrantDto,
+    @CurrentUser('id') userId: string,
+  ): Promise<any> {
+    return this.collaborationsService.createFundingGrant(id, createFundingGrantDto, userId);
+  }
+
+  // Nested routes for Resource Contributions
+  @Post(':id/resource-contributions')
+  @ApiOperation({ summary: 'Create a resource contribution under a collaboration' })
+  @ApiResponse({ status: 201, description: 'Resource contribution created successfully' })
+  @ApiResponse({ status: 404, description: 'Collaboration not found' })
+  @Roles('admin', 'focal_person', 'officer', 'division_director')
+  async createResourceContribution(
+    @Param('id') id: string,
+    @Body() createResourceContributionDto: CreateResourceContributionDto,
+    @CurrentUser('id') userId: string,
+  ): Promise<any> {
+    return this.collaborationsService.createResourceContribution(id, createResourceContributionDto, userId);
   }
 }
