@@ -357,6 +357,85 @@ async function main() {
 
   console.log('✅ Divisions created successfully');
 
+  // Create partner registration lookup tables
+  console.log('🤝 Creating partner lookup tables...');
+  const partnerLookupPrisma: any = prisma;
+
+  const organizationTypes = [
+    'Government',
+    'University',
+    'Research Institute',
+    'Private Company',
+    'Startup',
+    'Development Partner',
+    'NGO',
+    'International Organization',
+    'Embassy',
+    'Civil Society',
+    'Other',
+  ];
+
+  for (const typeName of organizationTypes) {
+    await partnerLookupPrisma.organizationType.upsert({
+      where: { typeName },
+      update: { updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  const partnerClassifications = [
+    'Strategic Partner',
+    'Technical Partner',
+    'Academic Partner',
+    'Funding Partner',
+    'Industry Partner',
+    'Innovation Partner',
+    'Implementing Partner',
+    'Other',
+  ];
+
+  for (const classificationName of partnerClassifications) {
+    await partnerLookupPrisma.partnerClassification.upsert({
+      where: { classificationName },
+      update: { updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        classificationName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  const partnerStatuses = [
+    'Prospect',
+    'Under Discussion',
+    'Active',
+    'Dormant',
+    'Expired',
+    'Terminated',
+  ];
+
+  for (const statusName of partnerStatuses) {
+    await partnerLookupPrisma.partnerStatus.upsert({
+      where: { statusName },
+      update: { updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        statusName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Partner lookup tables created successfully');
+
   // Create event types
   console.log('📅 Creating event types...');
   const eventTypes = [
@@ -615,6 +694,67 @@ async function main() {
   }
 
   console.log('✅ Opportunity sources created successfully');
+
+  // Create agreement types
+  console.log('📜 Creating agreement types...');
+  const agreementTypes = [
+    { typeName: 'MoU', description: 'Memorandum of Understanding' },
+    { typeName: 'MoA', description: 'Memorandum of Agreement' },
+    { typeName: 'Contract', description: 'Formal contract agreement' },
+    { typeName: 'Grant Agreement', description: 'Funding or grant agreement' },
+    { typeName: 'Research Agreement', description: 'Collaborative research agreement' },
+    { typeName: 'NDA', description: 'Non-Disclosure Agreement' },
+    { typeName: 'Other', description: 'Other agreement types' },
+  ];
+
+  for (const type of agreementTypes) {
+    await prisma.agreementType.upsert({
+      where: { typeName: type.typeName },
+      update: { description: type.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        typeName: type.typeName,
+        description: type.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Agreement types created successfully');
+
+  // Create document types
+  console.log('📂 Creating document types...');
+  const documentTypes = [
+    { name: 'Agenda', description: 'Meeting or event agenda' },
+    { name: 'Attendance Sheet', description: 'Participant attendance record' },
+    { name: 'Presentation', description: 'Slide deck or presentation materials' },
+    { name: 'MoU Draft', description: 'Draft Memorandum of Understanding' },
+    { name: 'Signed Agreement', description: 'Signed partnership agreement' },
+    { name: 'Proposal', description: 'Project or partnership proposal' },
+    { name: 'Report', description: 'Progress, final, or thematic report' },
+    { name: 'Financial Document', description: 'Budgets, financial reports, or grants' },
+    { name: 'Letter', description: 'Official incoming or outgoing correspondence' },
+    { name: 'Other', description: 'Other document types' },
+  ];
+
+  for (const type of documentTypes) {
+    await prisma.documentType.upsert({
+      where: { name: type.name },
+      update: { description: type.description, updatedAt: new Date() },
+      create: {
+        id: randomUUID(),
+        name: type.name,
+        description: type.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  console.log('✅ Document types created successfully');
+
+
 
   // Create admin user with explicit UUID
   console.log('👤 Creating admin user...');
@@ -889,9 +1029,14 @@ async function main() {
   console.log('✅ 5 visit categories created (Domestic, International, Field, Office, Virtual)');
   console.log('✅ 5 communication types created (Email, Letter, Memo, Meeting Minutes, Phone Call)');
   console.log('✅ 6 engagement types created (Partnership Agreement, MoU, Joint Project, Technical Assistance, Capacity Building, Research Collaboration)');
+  console.log('✅ 7 agreement types created (MoU, MoA, Contract, Grant Agreement, Research Agreement, NDA, Other)');
+  console.log('✅ 10 document types created (Agenda, Attendance Sheet, Presentation, MoU Draft, Signed Agreement, etc.)');
   console.log('✅ 5 opportunity categories created (Technology, Research & Development, Capacity Building, Infrastructure, Funding & Grants)');
   console.log('✅ 4 strategic importance levels created (Critical, High, Medium, Low)');
   console.log('✅ 6 opportunity sources created (Partner Proposal, Internal Identification, Government Initiative, International Organization, Donor Agency, Market Research)');
+  console.log('✅ 11 organization types created (Government, University, Research Institute, Private Company, Startup, NGO, etc.)');
+  console.log('✅ 8 partner classifications created (Strategic Partner, Technical Partner, Academic Partner, etc.)');
+  console.log('✅ 6 partner statuses created (Prospect, Under Discussion, Active, Dormant, Expired, Terminated)');
   console.log('✅ 5 users created:');
   console.log('   - admin@example.com / Admin@123 (Admin, Headquarters)');
   console.log('   - manager@example.com / Manager@123 (Manager, Headquarters)');
