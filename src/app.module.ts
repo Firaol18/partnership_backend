@@ -22,7 +22,6 @@ import { VisitsModule } from './modules/visits/visits.module';
 import { OpportunitiesModule } from './modules/opportunities/opportunities.module';
 import { CommunicationsModule } from './modules/communications/communications.module';
 import { EngagementsModule } from './modules/engagements/engagements.module';
-import { CollaborationsModule } from './modules/collaborations/collaborations.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -61,7 +60,6 @@ import appConfig from './config/app.config';
     OpportunitiesModule,
     CommunicationsModule,
     EngagementsModule,
-    CollaborationsModule,
   ],
   providers: [
     {
