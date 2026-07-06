@@ -20,6 +20,31 @@ export class PartnersService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreatePartnerDto, userId: string): Promise<PartnerResponseDto> {
+    // Validate PATH A references if FORMAL
+    if (dto.registrationPath === 'FORMAL') {
+      if (!dto.agreementId) {
+        throw new BadRequestException('agreementId is required for FORMAL registration path');
+      }
+      const agreement = await this.prisma.agreement.findUnique({
+        where: { id: dto.agreementId, deletedAt: null },
+      });
+      if (!agreement) throw new NotFoundException('Agreement not found');
+    }
+
+    if (dto.opportunityId) {
+      const opp = await this.prisma.partnerOpportunity.findUnique({
+        where: { id: dto.opportunityId, deletedAt: null },
+      });
+      if (!opp) throw new NotFoundException('Opportunity not found');
+    }
+
+    if (dto.engagementId) {
+      const eng = await this.prisma.engagement.findUnique({
+        where: { id: dto.engagementId, deletedAt: null },
+      });
+      if (!eng) throw new NotFoundException('Engagement not found');
+    }
+
     // Validate status
     const status = await this.prisma.partnerStatus.findUnique({
       where: { id: dto.statusId, deletedAt: null },
@@ -54,9 +79,9 @@ export class PartnersService {
         partnerUid: crypto.randomUUID(),
         partnerId,
         registrationPath: dto.registrationPath,
-        agreementId:null,
-        opportunityId: null,
-        engagementId: null,
+        agreementId: dto.agreementId,
+        opportunityId: dto.opportunityId,
+        engagementId: dto.engagementId,
         partnerName: dto.partnerName,
         acronym: dto.acronym,
         organizationTypeId: dto.organizationTypeId,
