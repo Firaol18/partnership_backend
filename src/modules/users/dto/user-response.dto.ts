@@ -47,6 +47,6 @@ export class UserResponseDto {
   @ApiProperty({ type: [RoleResponseDto] })
   roles: RoleResponseDto[];
 
-  @ApiProperty({ type: [String], example: ['users:read', 'users:create'] })
-  permissions: string[];
+  // @ApiProperty({ type: [String], example: ['users:read', 'users:create'] })
+  // permissions: string[];
 }

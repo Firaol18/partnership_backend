@@ -180,15 +180,7 @@ export class UsersService {
         division: true,
         userRoles: {
           include: {
-            role: {
-              include: {
-                rolePermissions: {
-                  include: {
-                    permission: true,
-                  },
-                },
-              },
-            },
+            role: true,
           },
         },
       },
@@ -214,15 +206,7 @@ export class UsersService {
         division: true,
         userRoles: {
           include: {
-            role: {
-              include: {
-                rolePermissions: {
-                  include: {
-                    permission: true,
-                  },
-                },
-              },
-            },
+            role: true,
           },
         },
       },
@@ -510,7 +494,7 @@ export class UsersService {
           }
         : null,
       roles,
-      permissions: [...new Set(permissions)] as string[],
+      // permissions: [...new Set(permissions)] as string[],
     };
   }
 }
