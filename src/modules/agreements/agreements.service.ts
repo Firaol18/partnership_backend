@@ -818,7 +818,7 @@ export class AgreementsService {
   private getIncludeObject() {
     return {
       agreementType: true,
-      creator: {
+      createdBy: {
         select: {
           id: true,
           fullName: true,
@@ -847,7 +847,7 @@ export class AgreementsService {
           email: true,
         },
       },
-      approver: {
+      approvedBy: {
         select: {
           id: true,
           fullName: true,
@@ -943,11 +943,11 @@ export class AgreementsService {
       previousVersionId: agreement.previousVersionId,
       status: agreement.status,
       terminationNote: agreement.terminationNote,
-      createdBy: agreement.creator,
+      createdBy: agreement.createdBy,
       legalReviewedBy: agreement.legalReviewedBy,
       reviewer: agreement.reviewer,
       verifier: agreement.verifier,
-      approver: agreement.approver,
+      approver: agreement.approvedBy,
       documents: agreement.documents,
       amendments: agreement.amendments,
       reviewHistory: agreement.reviewHistory,
