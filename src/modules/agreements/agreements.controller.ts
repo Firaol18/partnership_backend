@@ -31,6 +31,8 @@ import { TerminateAgreementDto } from './dto/terminate-agreement.dto';
 import { CreateAmendmentDto } from './dto/create-amendment.dto';
 import { QueryAgreementsDto } from './dto/query-agreements.dto';
 import { AgreementResponseDto } from './dto/agreement-response.dto';
+import { CreateAgreementTypeDto } from './dto/create-agreement-type.dto';
+import { UpdateAgreementTypeDto } from './dto/update-agreement-type.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -69,6 +71,60 @@ export class AgreementsController {
   async findAll(@Query() query: QueryAgreementsDto) {
     return this.agreementsService.findAll(query);
   }
+
+  // ─── AGREEMENT TYPE MANAGEMENT ───────────────────────────────
+
+  @Get('lookup/types')
+  @Roles('admin', 'manager', 'officer', 'user')
+  @ApiOperation({ summary: 'Get all agreement types' })
+  @ApiResponse({ status: 200, description: 'Agreement types retrieved successfully' })
+  async getAgreementTypes() {
+    return this.agreementsService.getAgreementTypes();
+  }
+
+  @Post('lookup/types')
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Create a new agreement type' })
+  @ApiResponse({ status: 201, description: 'Agreement type created successfully' })
+  @ApiResponse({ status: 400, description: 'Agreement type already exists' })
+  async createAgreementType(@Body() dto: CreateAgreementTypeDto) {
+    return this.agreementsService.createAgreementType(dto);
+  }
+
+  @Get('lookup/types/:id')
+  @Roles('admin', 'manager', 'officer', 'user')
+  @ApiOperation({ summary: 'Get a single agreement type by ID' })
+  @ApiResponse({ status: 200, description: 'Agreement type retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Agreement type not found' })
+  async getAgreementType(@Param('id') id: string) {
+    return this.agreementsService.getAgreementType(id);
+  }
+
+  @Patch('lookup/types/:id')
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Update an agreement type' })
+  @ApiResponse({ status: 200, description: 'Agreement type updated successfully' })
+  @ApiResponse({ status: 404, description: 'Agreement type not found' })
+  @ApiResponse({ status: 400, description: 'Agreement type name already taken' })
+  async updateAgreementType(
+    @Param('id') id: string,
+    @Body() dto: UpdateAgreementTypeDto,
+  ) {
+    return this.agreementsService.updateAgreementType(id, dto);
+  }
+
+  @Delete('lookup/types/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Delete an agreement type (soft delete)' })
+  @ApiResponse({ status: 204, description: 'Agreement type deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Agreement type not found' })
+  @ApiResponse({ status: 400, description: 'Cannot delete: type is in use by active agreements' })
+  async deleteAgreementType(@Param('id') id: string) {
+    return this.agreementsService.deleteAgreementType(id);
+  }
+
+  // ─────────────────────────────────────────────────────────────
 
   @Get(':id')
   @Roles('admin', 'manager', 'officer', 'user')

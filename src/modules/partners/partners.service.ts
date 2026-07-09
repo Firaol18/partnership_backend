@@ -13,6 +13,8 @@ import { CreateContactDto } from './dto/create-contact.dto';
 import { CreateFocalPersonDto } from './dto/create-focal-person.dto';
 import { QueryPartnersDto } from './dto/query-partners.dto';
 import { PartnerResponseDto } from './dto/partner-response.dto';
+import { CreateOrganizationTypeDto, UpdateOrganizationTypeDto } from './dto/organization-type.dto';
+import { CreatePartnerClassificationDto, UpdatePartnerClassificationDto } from './dto/partner-classification.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -432,7 +434,7 @@ export class PartnersService {
     });
   }
 
-  // ─── LOOKUP TABLES ───────────────────────────────────────────
+  // ─── ORGANIZATION TYPE CRUD ──────────────────────────────────
 
   async getOrganizationTypes() {
     return this.prisma.organizationType.findMany({
@@ -441,10 +443,116 @@ export class PartnersService {
     });
   }
 
+  async createOrganizationType(dto: CreateOrganizationTypeDto) {
+    const existing = await this.prisma.organizationType.findFirst({
+      where: { typeName: dto.typeName, deletedAt: null },
+    });
+    if (existing) {
+      throw new BadRequestException(`Organization type "${dto.typeName}" already exists`);
+    }
+    return this.prisma.organizationType.create({
+      data: { typeName: dto.typeName },
+    });
+  }
+
+  async getOrganizationType(id: string) {
+    const type = await this.prisma.organizationType.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!type) throw new NotFoundException('Organization type not found');
+    return type;
+  }
+
+  async updateOrganizationType(id: string, dto: UpdateOrganizationTypeDto) {
+    await this.getOrganizationType(id);
+    const existing = await this.prisma.organizationType.findFirst({
+      where: { typeName: dto.typeName, deletedAt: null, NOT: { id } },
+    });
+    if (existing) {
+      throw new BadRequestException(`Organization type "${dto.typeName}" already exists`);
+    }
+    return this.prisma.organizationType.update({
+      where: { id },
+      data: { typeName: dto.typeName, updatedAt: new Date() },
+    });
+  }
+
+  async deleteOrganizationType(id: string) {
+    await this.getOrganizationType(id);
+    const inUse = await this.prisma.partner.count({
+      where: { organizationTypeId: id, deletedAt: null },
+    });
+    if (inUse > 0) {
+      throw new BadRequestException(
+        `Cannot delete: this organization type is used by ${inUse} active partner(s)`,
+      );
+    }
+    await this.prisma.organizationType.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  // ─── PARTNER CLASSIFICATION CRUD ───────────────────────────
+
   async getPartnerClassifications() {
     return this.prisma.partnerClassification.findMany({
       where: { deletedAt: null },
       orderBy: { classificationName: 'asc' },
+    });
+  }
+
+  async createPartnerClassification(dto: CreatePartnerClassificationDto) {
+    const existing = await this.prisma.partnerClassification.findFirst({
+      where: { classificationName: dto.classificationName, deletedAt: null },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        `Partner classification "${dto.classificationName}" already exists`,
+      );
+    }
+    return this.prisma.partnerClassification.create({
+      data: { classificationName: dto.classificationName },
+    });
+  }
+
+  async getPartnerClassification(id: string) {
+    const classification = await this.prisma.partnerClassification.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!classification) throw new NotFoundException('Partner classification not found');
+    return classification;
+  }
+
+  async updatePartnerClassification(id: string, dto: UpdatePartnerClassificationDto) {
+    await this.getPartnerClassification(id);
+    const existing = await this.prisma.partnerClassification.findFirst({
+      where: { classificationName: dto.classificationName, deletedAt: null, NOT: { id } },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        `Partner classification "${dto.classificationName}" already exists`,
+      );
+    }
+    return this.prisma.partnerClassification.update({
+      where: { id },
+      data: { classificationName: dto.classificationName, updatedAt: new Date() },
+    });
+  }
+
+  async deletePartnerClassification(id: string) {
+    await this.getPartnerClassification(id);
+    const inUse = await this.prisma.partner.count({
+      where: { partnerClassificationId: id, deletedAt: null },
+    });
+    if (inUse > 0) {
+      throw new BadRequestException(
+        `Cannot delete: this classification is used by ${inUse} active partner(s)`,
+      );
+    }
+    await this.prisma.partnerClassification.update({
+      where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 

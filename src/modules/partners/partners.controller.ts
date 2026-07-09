@@ -28,6 +28,8 @@ import { CreateContactDto } from './dto/create-contact.dto';
 import { CreateFocalPersonDto } from './dto/create-focal-person.dto';
 import { QueryPartnersDto } from './dto/query-partners.dto';
 import { PartnerResponseDto } from './dto/partner-response.dto';
+import { CreateOrganizationTypeDto, UpdateOrganizationTypeDto } from './dto/organization-type.dto';
+import { CreatePartnerClassificationDto, UpdatePartnerClassificationDto } from './dto/partner-classification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -61,19 +63,103 @@ export class PartnersController {
     return this.partnersService.findAll(query);
   }
 
+  // ─── ORGANIZATION TYPE MANAGEMENT ──────────────────────────────
+
   @Get('lookup/organization-types')
   @Roles('admin', 'manager', 'officer', 'user')
-  @ApiOperation({ summary: 'Get all organization types (lookup)' })
+  @ApiOperation({ summary: 'Get all organization types' })
+  @ApiResponse({ status: 200, description: 'Organization types retrieved successfully' })
   getOrganizationTypes() {
     return this.partnersService.getOrganizationTypes();
   }
 
+  @Post('lookup/organization-types')
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Create a new organization type' })
+  @ApiResponse({ status: 201, description: 'Organization type created successfully' })
+  @ApiResponse({ status: 400, description: 'Organization type already exists' })
+  createOrganizationType(@Body() dto: CreateOrganizationTypeDto) {
+    return this.partnersService.createOrganizationType(dto);
+  }
+
+  @Get('lookup/organization-types/:id')
+  @Roles('admin', 'manager', 'officer', 'user')
+  @ApiOperation({ summary: 'Get a single organization type by ID' })
+  @ApiResponse({ status: 200, description: 'Organization type retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Organization type not found' })
+  getOrganizationType(@Param('id') id: string) {
+    return this.partnersService.getOrganizationType(id);
+  }
+
+  @Patch('lookup/organization-types/:id')
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Update an organization type' })
+  @ApiResponse({ status: 200, description: 'Organization type updated successfully' })
+  @ApiResponse({ status: 404, description: 'Organization type not found' })
+  @ApiResponse({ status: 400, description: 'Name already taken' })
+  updateOrganizationType(@Param('id') id: string, @Body() dto: UpdateOrganizationTypeDto) {
+    return this.partnersService.updateOrganizationType(id, dto);
+  }
+
+  @Delete('lookup/organization-types/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Delete an organization type (soft delete)' })
+  @ApiResponse({ status: 204, description: 'Organization type deleted successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot delete: type is in use by active partners' })
+  deleteOrganizationType(@Param('id') id: string) {
+    return this.partnersService.deleteOrganizationType(id);
+  }
+
+  // ─── PARTNER CLASSIFICATION MANAGEMENT ───────────────────────
+
   @Get('lookup/classifications')
   @Roles('admin', 'manager', 'officer', 'user')
-  @ApiOperation({ summary: 'Get all partner classifications (lookup)' })
+  @ApiOperation({ summary: 'Get all partner classifications' })
+  @ApiResponse({ status: 200, description: 'Classifications retrieved successfully' })
   getPartnerClassifications() {
     return this.partnersService.getPartnerClassifications();
   }
+
+  @Post('lookup/classifications')
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Create a new partner classification' })
+  @ApiResponse({ status: 201, description: 'Classification created successfully' })
+  @ApiResponse({ status: 400, description: 'Classification already exists' })
+  createPartnerClassification(@Body() dto: CreatePartnerClassificationDto) {
+    return this.partnersService.createPartnerClassification(dto);
+  }
+
+  @Get('lookup/classifications/:id')
+  @Roles('admin', 'manager', 'officer', 'user')
+  @ApiOperation({ summary: 'Get a single partner classification by ID' })
+  @ApiResponse({ status: 200, description: 'Classification retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Classification not found' })
+  getPartnerClassification(@Param('id') id: string) {
+    return this.partnersService.getPartnerClassification(id);
+  }
+
+  @Patch('lookup/classifications/:id')
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Update a partner classification' })
+  @ApiResponse({ status: 200, description: 'Classification updated successfully' })
+  @ApiResponse({ status: 404, description: 'Classification not found' })
+  @ApiResponse({ status: 400, description: 'Name already taken' })
+  updatePartnerClassification(@Param('id') id: string, @Body() dto: UpdatePartnerClassificationDto) {
+    return this.partnersService.updatePartnerClassification(id, dto);
+  }
+
+  @Delete('lookup/classifications/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Delete a partner classification (soft delete)' })
+  @ApiResponse({ status: 204, description: 'Classification deleted successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot delete: classification is in use by active partners' })
+  deletePartnerClassification(@Param('id') id: string) {
+    return this.partnersService.deletePartnerClassification(id);
+  }
+
+  // ─── PARTNER STATUS (read-only) ──────────────────────────────
 
   @Get('lookup/statuses')
   @Roles('admin', 'manager', 'officer', 'user')

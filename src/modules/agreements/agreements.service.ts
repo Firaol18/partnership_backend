@@ -15,6 +15,8 @@ import { TerminateAgreementDto } from './dto/terminate-agreement.dto';
 import { CreateAmendmentDto } from './dto/create-amendment.dto';
 import { QueryAgreementsDto } from './dto/query-agreements.dto';
 import { AgreementResponseDto } from './dto/agreement-response.dto';
+import { CreateAgreementTypeDto } from './dto/create-agreement-type.dto';
+import { UpdateAgreementTypeDto } from './dto/update-agreement-type.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -811,6 +813,76 @@ export class AgreementsService {
     });
 
     return this.findOne(amendment.agreementId);
+  }
+
+  // ─── AGREEMENT TYPE CRUD ─────────────────────────────────────
+
+  async getAgreementTypes() {
+    return this.prisma.agreementType.findMany({
+      where: { deletedAt: null },
+      orderBy: { typeName: 'asc' },
+    });
+  }
+
+  async createAgreementType(dto: CreateAgreementTypeDto) {
+    const existing = await this.prisma.agreementType.findFirst({
+      where: { typeName: dto.typeName, deletedAt: null },
+    });
+    if (existing) {
+      throw new BadRequestException(`Agreement type "${dto.typeName}" already exists`);
+    }
+    return this.prisma.agreementType.create({
+      data: {
+        typeName: dto.typeName,
+        description: dto.description,
+      },
+    });
+  }
+
+  async getAgreementType(id: string) {
+    const type = await this.prisma.agreementType.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!type) {
+      throw new NotFoundException('Agreement type not found');
+    }
+    return type;
+  }
+
+  async updateAgreementType(id: string, dto: UpdateAgreementTypeDto) {
+    await this.getAgreementType(id);
+    if (dto.typeName) {
+      const existing = await this.prisma.agreementType.findFirst({
+        where: { typeName: dto.typeName, deletedAt: null, NOT: { id } },
+      });
+      if (existing) {
+        throw new BadRequestException(`Agreement type "${dto.typeName}" already exists`);
+      }
+    }
+    return this.prisma.agreementType.update({
+      where: { id },
+      data: {
+        ...(dto.typeName && { typeName: dto.typeName }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  async deleteAgreementType(id: string) {
+    await this.getAgreementType(id);
+    const inUse = await this.prisma.agreement.count({
+      where: { agreementTypeId: id, deletedAt: null },
+    });
+    if (inUse > 0) {
+      throw new BadRequestException(
+        `Cannot delete: this agreement type is used by ${inUse} active agreement(s)`,
+      );
+    }
+    await this.prisma.agreementType.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 
   // HELPERS
